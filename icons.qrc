@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/iconos">
+        <file>images/referee.png</file>
+        <file>images/settings.png</file>
+        <file>images/stop.png</file>
+        <file>images/timer.png</file>
+        <file>images/info.png</file>
+        <file>images/report.png</file>
+        <file>images/bonus.png</file>
+        <file>images/dorsales.png</file>
+        <file>images/icon.png</file>
+        <file>images/square.png</file>
+        <file>images/dorsal_icon.png</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>images/bonus_view.png</file>
+    </qresource>
+    <qresource prefix="/sounds">
+        <file>sounds/beep.wav</file>
+    </qresource>
+</RCC>
