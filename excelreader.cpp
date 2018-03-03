@@ -12,21 +12,16 @@ void ExcelReader::readReferees(QString pathFile)
     QAxObject* workbooks = excel->querySubObject( "Workbooks" );
     workbooks->querySubObject( "Open(const QString&)", pathFile);//"C:\\QtWorkspace\\PLANTILLA ARBITROS OFICIALES.xlsx" );
     QAxObject* workbook = excel->querySubObject("ActiveWorkBook");
-    //QAxObject* worksheets = workbook->querySubObject( "Worksheets" );
     QAxObject* worksheet = workbook->querySubObject("Worksheets(int)", 1); //worksheet number
 
     QAxObject* usedrange = worksheet->querySubObject("UsedRange");
     QAxObject* rows = usedrange->querySubObject("Rows");
-    //QAxObject* columns = usedrange->querySubObject("Columns");
     int intRowStart = PLANTILLA_ARBITROS_FILA_INICIO; //usedrange->property("Row").toInt();
-    //int intColStart = usedrange->property("Column").toInt();
-    //int intCols = columns->property("Count").toInt();
     int intRows = rows->property("Count").toInt();
 
     SessionManagement session;
     QMap<int, QString> mapDorsalesTags = session.loadAsignacionesDorsales();
 
-    int contador = 1;
     for (int i = intRowStart; i < intRowStart + intRows; i++)
     {
         QAxObject * cellDorsal = excel->querySubObject("Cells(Int, Int)", i,  PLANTILLA_ARBITROS_COL_DORSAL);
@@ -47,15 +42,14 @@ void ExcelReader::readReferees(QString pathFile)
             continue;
         }
 
-        Referee* referee = new  Referee();
-        //referee->born = cellValueFNac.DateTime;
+        Referee* referee = new  Referee();        
         referee->dorsal = cellValueDorsal.toInt();
         referee->name = cellValueNombre.toString().simplified();
         referee->comarca = cellValueComarca.toString().simplified();
         referee->gender = cellValueSexo.toString().simplified().toUpper();
         referee->categoria = cellValueCategoria.toString().trimmed().toUpper();
         DataManagement::getInstance()->addReferee(referee, findTagInMap(referee->dorsal, mapDorsalesTags));
-        contador++;
+
     }
     workbook->dynamicCall("Close()");
     excel->dynamicCall( "Quit()");
@@ -72,6 +66,55 @@ QString ExcelReader::findTagInMap(int dorsal, QMap<int, QString> map)
 
 void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro> resultados)
 {
+
+    QAxObject* excel = new QAxObject( "Excel.Application", 0 );
+    QAxObject* workbooks = excel->querySubObject( "Workbooks" );
+    workbooks->querySubObject( "Open(const QString&)", "\\plantillaResultados.xlsx");
+    QAxObject* workbook = excel->querySubObject("ActiveWorkBook");
+    QAxObject* worksheet = workbook->querySubObject("Worksheets(int)", 1);
+    QAxObject* usedrange = worksheet->querySubObject("UsedRange");
+    QAxObject* rows = usedrange->querySubObject("Rows");
+    int intRowStart = PLANTILLA_ARBITROS_FILA_INICIO;
+    int intRows = rows->property("Count").toInt();
+
+    int fila = 8;
+    for (ResultadoArbitro resultado : resultados) {
+
+        QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
+        celdaDorsal->setProperty("Value", QString::number(resultado.arbitro->dorsal));
+
+        QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
+        celdaNombre->setProperty("Value", resultado.arbitro->name);
+
+        for (int i = 0; i < resultado.lista6x40.size(); i++) {
+            QAxObject * celdaC6x40 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_C6x40 + i);
+            celdaC6x40->setProperty("Value", resultado.lista6x40.at(i).toString("ss.zz"));
+        }
+        QAxObject * celdaPromedioC6x40 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_PROMEDIO_C6x40);
+        celdaPromedioC6x40->setProperty("Value", resultado.promedio.toString("ss.zz"));
+
+        QAxObject * celdaBonusC6x40 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_BONIFICACION_C6x40);
+        celdaBonusC6x40->setProperty("Value", QString::number(resultado.bonificacion6x40));
+
+        QAxObject * celdaC2000 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_C2000);
+        celdaC2000->setProperty("Value", resultado.getResultado2000());
+
+        QAxObject * celdaBonusC2000 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_BONIFICACION_C2000);
+        celdaBonusC2000->setProperty("Value", QString::number(resultado.bonificacion2000));
+
+        QAxObject * celdaCPC = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_CPC);
+        celdaCPC->setProperty("Value", resultado.resultadoPC.toString("mm:ss.zz"));
+
+        QAxObject * celdaBonusCPC = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_BONIFICACION_CPC);
+        celdaBonusCPC->setProperty("Value", QString::number(resultado.bonificacionPC));
+
+        QAxObject * celdaBonusTotal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_TOTAL_BONIFICACION);
+        celdaBonusTotal->setProperty("Value", QString::number(resultado.getBonificacionTotal()));
+    }
+
+    workbook->dynamicCall("Close()");
+    excel->dynamicCall( "Quit()");
+    delete excel;
 
 }
 
