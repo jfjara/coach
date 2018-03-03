@@ -18,7 +18,10 @@ double ResultadoArbitro::getResultado2000()
         secs += r.second();
     }
 
-    return 2000.0 / secs;
+    double minutos = secs / 60.0;
+    double segundos = (secs - (minutos * 60.0)) / 100.0;
+
+    return minutos + segundos;
 }
 
 double ResultadoArbitro::getBonificacionTotal() const
