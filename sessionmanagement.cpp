@@ -51,6 +51,12 @@ QMap<int, QList<QTime>> SessionManagement::loadPrueba(QString filename)
             times.append(QTime::fromString(time, "hh:mm:ss.zzz"));
         }
         qSort(times.begin(), times.end(), SessionManagement::timeLessThan);
+
+        //elimina el peor valor si hubiese repeticion
+        if (times.size() == 7) {
+            times.removeAt(6);
+        }
+
         map.insert(dorsal, times);
     }
     return map;

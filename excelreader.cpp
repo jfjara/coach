@@ -53,6 +53,7 @@ void ExcelReader::readReferees(QString pathFile)
         referee->name = cellValueNombre.toString().simplified();
         referee->comarca = cellValueComarca.toString().simplified();
         referee->gender = cellValueSexo.toString().simplified().toUpper();
+        referee->categoria = cellValueCategoria.toString().trimmed().toUpper();
         DataManagement::getInstance()->addReferee(referee, findTagInMap(referee->dorsal, mapDorsalesTags));
         contador++;
     }
@@ -67,6 +68,11 @@ QString ExcelReader::findTagInMap(int dorsal, QMap<int, QString> map)
         return "";
     }
     return map.value(dorsal);
+}
+
+void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro> resultados)
+{
+
 }
 
 void ExcelReader::readBonus(QString categoria, QString pathFile)

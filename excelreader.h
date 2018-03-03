@@ -10,6 +10,7 @@
 #include "constantes.h"
 #include "datamanagement.h"
 #include "sessionmanagement.h"
+#include "resultadoarbitro.h"
 
 class ExcelReader
 {
@@ -18,6 +19,7 @@ public:
 
     void readBonus(QString categoria, QString pathFile);
     void readReferees(QString pathFile);
+    void createResultsReport(QString path, QList<ResultadoArbitro> resultados);
 
 private:
 

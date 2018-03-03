@@ -170,6 +170,46 @@ void DataManagement::addBonus(QString categoria, SPORT_TEST type, Bonus* bonus)
     }
 }
 
+double DataManagement::getBonificacion(QString categoria, SPORT_TEST tipo, double mxs)
+{
+    if (bonusMap.contains(categoria)) {
+
+        QList<Bonus*> bonus = bonusMap.value(categoria).value(tipo);
+
+        int i = 0;
+        while (i < bonus.size()) {
+            if (bonus.at(i)->timeEnd >= mxs && bonus.at(i)->timeInit <= mxs) {
+                return bonus.at(i)->points;
+            }
+            i++;
+        }
+    }
+    return 0.0;
+}
+
+double DataManagement::getBonificacion(QString categoria, SPORT_TEST tipo, int msecs)
+{
+
+    if (bonusMap.contains(categoria)) {
+
+        int secs = msecs / 1000;
+        double ms = (double)(msecs - secs * 1000) / 1000.0;
+
+        double time = (double)secs + ms;
+
+        QList<Bonus*> bonus = bonusMap.value(categoria).value(tipo);
+
+        int i = 0;
+        while (i < bonus.size()) {
+            if (bonus.at(i)->timeEnd >= time && bonus.at(i)->timeInit <= time) {
+                return bonus.at(i)->points;
+            }
+            i++;
+        }
+    }
+    return 0.0;
+}
+
 void DataManagement::addReferee(Referee* referee, QString tag)
 {
     //referee->id = getNewIdForReferee();

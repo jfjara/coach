@@ -319,7 +319,7 @@ void MyCoachMainWindow::addLapRegistry(Referee* referee)
 
 void MyCoachMainWindow::cargarBonus(QString categoria, QString filename)
 {
-    DataManagement::getInstance()->bonusMap.clear();
+    //DataManagement::getInstance()->bonusMap.clear();
     ExcelReader reader;
     reader.readBonus(categoria, QDir::toNativeSeparators(filename));
     mostrarMensajeCargaBonus();
@@ -383,21 +383,27 @@ void MyCoachMainWindow::createReport()
     }
 
     if (!resultados.isEmpty()) {
-        //GENERAR EL EXCEL
-        for (ResultadoArbitro resultado : resultados) {
-
-            QTime total6x40 = QTime(0,0);
+        for (ResultadoArbitro resultado : resultados) {           
+            int msecs = 0;
             for (QTime r : resultado.lista6x40) {
-                total6x40 = total6x40.addMSecs(r.msec());
-            }
-            int msec6x40 = total6x40.msec() / resultado.lista6x40.size();
-            resultado.promedio.addMSecs(msec6x40);
+                msecs += r.second() * 1000 + r.msec();
+            }            
+            int msec6x40 = msecs / resultado.lista6x40.size();
+            resultado.promedio = resultado.promedio.addMSecs(msec6x40);
 
-
-
+            resultado.bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado.arbitro->categoria,
+                                                                                        C6X40, resultado.promedio.second() * 1000 + resultado.promedio.msec());
+            resultado.bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado.arbitro->categoria,
+                                                                                        C2000MTS, resultado.getResultado2000());
+            resultado.bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado.arbitro->categoria,
+                                                                                      PRUEBA_DE_CAMPO, resultado.promedio.second() * 1000 + resultado.resultadoPC.msec());
         }
+        qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::promedioMayorQue);
 
+        ExcelReader reader;
+        reader.createResultsReport(sessionFilePath, resultados);
 
+        //mostrar mensaje de creacion
     }
 
 

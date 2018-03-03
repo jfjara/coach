@@ -29,6 +29,9 @@ public:
     SPORT_TEST getTipoPrueba(QString texto);
     CATEGORIAS getTipoCategoria(QString texto);
 
+    double getBonificacion(QString categoria, SPORT_TEST tipo, double mxs);
+    double getBonificacion(QString categoria, SPORT_TEST tipo, int msecs);
+
     double calcularBonificacion(QString categoria, SPORT_TEST prueba, QTime tiempo);
 
     bool addTagToProcess(QString tag);

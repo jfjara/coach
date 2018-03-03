@@ -22,8 +22,9 @@ public:
     double bonificacion5x40;
 
     double getPromedio6x40();
-    double getBonificacionTotal();
+    double getBonificacionTotal() const;
     double getTotal();
+    double getResultado2000();
 
 
 };

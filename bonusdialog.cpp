@@ -35,6 +35,11 @@ BonusDialog::~BonusDialog()
 
 void BonusDialog::cargarCategoria(QString categoria)
 {
+    ui->_60X40Table->setRowCount(0);
+    ui->_2000Table->setRowCount(0);
+    ui->_PCTable->setRowCount(0);
+
+
     QMap<SPORT_TEST, QList<Bonus*>> map = DataManagement::getInstance()->bonusMap.value(categoria);
     insertListBonusInTable(C6X40, map.value(C6X40));
     insertListBonusInTable(C2000MTS, map.value(C2000MTS));
