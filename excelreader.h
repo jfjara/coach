@@ -20,6 +20,9 @@ public:
     void readBonus(QString categoria, QString pathFile);
     void readReferees(QString pathFile);
     void createResultsReport(QString path, QList<ResultadoArbitro*> resultados);
+    void create6x40Report(QString path, QList<ResultadoArbitro*> resultados);
+    void create2000Report(QString path, QList<ResultadoArbitro*> resultados);
+    void createPCReport(QString path, QList<ResultadoArbitro*> resultados);
 
 private:
 

@@ -64,6 +64,22 @@ QString ExcelReader::findTagInMap(int dorsal, QMap<int, QString> map)
     return map.value(dorsal);
 }
 
+void ExcelReader::create6x40Report(QString path, QList<ResultadoArbitro*> resultados)
+{
+
+}
+
+void ExcelReader::create2000Report(QString path, QList<ResultadoArbitro*> resultados)
+{
+
+}
+
+void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultados)
+{
+
+}
+
+
 void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> resultados)
 {
 
@@ -104,7 +120,7 @@ void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> res
         celdaBonusC6x40->setProperty("Value", QString::number(resultado->bonificacion6x40));
 
         QAxObject * celdaC2000 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_C2000);
-        celdaC2000->setProperty("Value", resultado->getResultado2000());
+        celdaC2000->setProperty("Value", QString::number(resultado->getResultado2000()));
 
         QAxObject * celdaBonusC2000 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_BONIFICACION_C2000);
         celdaBonusC2000->setProperty("Value", QString::number(resultado->bonificacion2000));

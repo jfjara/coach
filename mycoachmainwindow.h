@@ -49,6 +49,11 @@ public:
          return a1->getBonificacionTotal() > a2->getBonificacionTotal();
     }
 
+    static bool nombreMayorQue(const ResultadoArbitro* a1, const ResultadoArbitro* a2) {
+         return a1->arbitro->name > a2->arbitro->name;
+    }
+
+
     ChronoWidget chronometre;
     int currentLap = 0;
     ClientSocket client;
@@ -74,6 +79,9 @@ public slots:
     void mostrarBonus();
     void loadBonusFile();
     void createReport();
+    void create6x40Report();
+    void create2000Report();
+    void createPCReport();
 
     void updateDateTime();
 
