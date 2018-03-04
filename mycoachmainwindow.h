@@ -45,8 +45,8 @@ public:
     explicit MyCoachMainWindow(QWidget *parent = 0);
     ~MyCoachMainWindow();
 
-    static bool promedioMayorQue(const ResultadoArbitro &a1, const ResultadoArbitro &a2) {
-         return a1.getBonificacionTotal() > a2.getBonificacionTotal();
+    static bool promedioMayorQue(const ResultadoArbitro* a1, const ResultadoArbitro* a2) {
+         return a1->getBonificacionTotal() > a2->getBonificacionTotal();
     }
 
     ChronoWidget chronometre;

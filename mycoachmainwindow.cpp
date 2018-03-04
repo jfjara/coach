@@ -363,40 +363,47 @@ void MyCoachMainWindow::createReport()
     QMap<int, QList<QTime>> map2000 = session.loadPrueba(sessionFilePath  + "\\2000.ses");
     QMap<int, QList<QTime>> mapPC = session.loadPrueba(sessionFilePath  + "\\pc.ses");
 
-    QList<ResultadoArbitro> resultados;
+    QList<ResultadoArbitro*> resultados;
     for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
     {
-        ResultadoArbitro resultado;
+        ResultadoArbitro* resultado = new ResultadoArbitro();
         if (map6x40.contains(arbitro->dorsal)) {
-            resultado.lista6x40 = map6x40.value(arbitro->dorsal);
+            resultado->lista6x40 = map6x40.value(arbitro->dorsal);
         }
 
         if (map2000.contains(arbitro->dorsal)) {
-            resultado.resultado2000 = map2000.value(arbitro->dorsal);
+            resultado->resultado2000 = map2000.value(arbitro->dorsal);
         }
 
         if (mapPC.contains(arbitro->dorsal)) {
-            resultado.resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
         }
-        resultado.arbitro = arbitro;
+        resultado->arbitro = arbitro;
         resultados.append(resultado);
     }
 
     if (!resultados.isEmpty()) {
-        for (ResultadoArbitro resultado : resultados) {           
+        for (ResultadoArbitro* resultado : resultados) {
             int msecs = 0;
-            for (QTime r : resultado.lista6x40) {
+            for (QTime r : resultado->lista6x40) {
                 msecs += r.second() * 1000 + r.msec();
             }            
-            int msec6x40 = msecs / resultado.lista6x40.size();
-            resultado.promedio = resultado.promedio.addMSecs(msec6x40);
+            int msec6x40 = msecs / resultado->lista6x40.size();
 
-            resultado.bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado.arbitro->categoria,
-                                                                                        C6X40, resultado.promedio.second() * 1000 + resultado.promedio.msec());
-            resultado.bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado.arbitro->categoria,
-                                                                                        C2000MTS, resultado.getResultado2000());
-            resultado.bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado.arbitro->categoria,
-                                                                                      PRUEBA_DE_CAMPO, resultado.promedio.second() * 1000 + resultado.resultadoPC.msec());
+            int secsPromedio = (msec6x40 / 1000);
+            int msecPromedio = msec6x40 - (secsPromedio * 1000);
+
+            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
+            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
+
+            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria,
+                                                                                        C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
+            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria,
+                                                                                        C2000MTS, resultado->getResultado2000());
+
+
+            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria,
+                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
         }
         qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::promedioMayorQue);
 

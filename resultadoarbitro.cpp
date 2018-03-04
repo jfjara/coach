@@ -15,13 +15,14 @@ double ResultadoArbitro::getResultado2000()
 {
     double secs = 0.0;
     for (QTime r : resultado2000) {
+        secs += (double)r.minute() * 60.0;
         secs += r.second();
     }
 
-    double minutos = secs / 60.0;
+    int minutos = secs / 60.0;
     double segundos = (secs - (minutos * 60.0)) / 100.0;
 
-    return minutos + segundos;
+    return (double)minutos + segundos;
 }
 
 double ResultadoArbitro::getBonificacionTotal() const
