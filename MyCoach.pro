@@ -47,7 +47,8 @@ SOURCES += main.cpp\
     dorsalestagsdialog.cpp \
     messagedialog.cpp \
     calibradordialog.cpp \
-    resultadoarbitro.cpp
+    resultadoarbitro.cpp \
+    reportsdialog.cpp
 
 HEADERS  += mycoachmainwindow.h \
     chronowidget.h \
@@ -76,7 +77,8 @@ HEADERS  += mycoachmainwindow.h \
     dorsalestagsdialog.h \
     messagedialog.h \
     calibradordialog.h \
-    resultadoarbitro.h
+    resultadoarbitro.h \
+    reportsdialog.h
 
 FORMS    += mycoachmainwindow.ui \
     chronowidget.ui \
@@ -87,7 +89,8 @@ FORMS    += mycoachmainwindow.ui \
     bonusdialog.ui \
     dorsalestagsdialog.ui \
     messagedialog.ui \
-    calibradordialog.ui
+    calibradordialog.ui \
+    reportsdialog.ui
 
 RESOURCES += \
     icons.qrc

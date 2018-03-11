@@ -84,12 +84,12 @@ void MyCoachMainWindow::loadSession()
     QString path = QFileDialog::getExistingDirectory(this, tr("Seleccionar carpeta de trabajo)"), QDir::currentPath());
 
     if (path !=Q_NULLPTR && !path.isEmpty()) {
-        cargarBonus("OFICIAL", path + "\\bonificaciones.xlsx");
+        cargarBonus("OFICIAL", path + "\\bonificaciones_oficial.xlsx");
         cargarBonus("ASISTENTE2B", path + "\\bonificaciones.xlsx");
-        cargarBonus("3DIVISION", path + "\\bonificaciones.xlsx");
+        cargarBonus("3DIVISION", path + "\\bonificaciones_3division.xlsx");
         cargarBonus("ASISTENTE3DIVISION", path + "\\bonificaciones.xlsx");
         cargarBonus("DIVISIONHONORSENIOR", path + "\\bonificaciones.xlsx");
-        cargarBonus("PROVINCIAL", path + "\\bonificaciones.xlsx");
+        cargarBonus("PROVINCIAL", path + "\\bonificaciones_provincial.xlsx");
         cargarBonus("NUEVOINGRESO", path + "\\bonificaciones.xlsx");
 
 
@@ -387,7 +387,7 @@ void MyCoachMainWindow::create6x40Report()
         qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::nombreMayorQue);
 
         ExcelReader reader;
-        reader.create6x40Report(sessionFilePath, resultados);
+        reader.create6x40Report(QDir::toNativeSeparators(sessionFilePath), resultados);
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de 6x40 en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
@@ -399,7 +399,7 @@ void MyCoachMainWindow::create2000Report()
         return;
     }
     SessionManagement session;
-    QMap<int, QList<QTime>> map2000 = session.loadPrueba(sessionFilePath  + "\\2000.ses");
+    QMap<int, QList<QTime>> map2000 = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\2000.ses");
 
     QList<ResultadoArbitro*> resultados;
     for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
@@ -419,7 +419,7 @@ void MyCoachMainWindow::create2000Report()
         qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::nombreMayorQue);
 
         ExcelReader reader;
-        reader.create2000Report(sessionFilePath, resultados);
+        reader.create2000Report(QDir::toNativeSeparators(sessionFilePath), resultados);
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas de 2000 metros en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
@@ -431,7 +431,7 @@ void MyCoachMainWindow::createPCReport()
         return;
     }
     SessionManagement session;
-    QMap<int, QList<QTime>> mapPC = session.loadPrueba(sessionFilePath  + "\\pc.ses");
+    QMap<int, QList<QTime>> mapPC = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\pc.ses");
 
     QList<ResultadoArbitro*> resultados;
     for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
@@ -451,7 +451,7 @@ void MyCoachMainWindow::createPCReport()
         qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::nombreMayorQue);
 
         ExcelReader reader;
-        reader.createPCReport(sessionFilePath, resultados);
+        reader.createPCReport(QDir::toNativeSeparators(sessionFilePath), resultados);
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de campo en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
@@ -464,9 +464,9 @@ void MyCoachMainWindow::createReport()
     }
 
     SessionManagement session;
-    QMap<int, QList<QTime>> map6x40 = session.loadPrueba(sessionFilePath  + "\\6x40.ses");
-    QMap<int, QList<QTime>> map2000 = session.loadPrueba(sessionFilePath  + "\\2000.ses");
-    QMap<int, QList<QTime>> mapPC = session.loadPrueba(sessionFilePath  + "\\pc.ses");
+    QMap<int, QList<QTime>> map6x40 = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\6x40.ses");
+    QMap<int, QList<QTime>> map2000 = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\2000.ses");
+    QMap<int, QList<QTime>> mapPC = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\pc.ses");
 
     QList<ResultadoArbitro*> resultados;
     for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
@@ -513,7 +513,7 @@ void MyCoachMainWindow::createReport()
         qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::promedioMayorQue);
 
         ExcelReader reader;
-        reader.createResultsReport(sessionFilePath, resultados);
+        reader.createResultsReport(QDir::toNativeSeparators(sessionFilePath), resultados);
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }

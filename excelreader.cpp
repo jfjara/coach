@@ -141,7 +141,7 @@ void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> res
         celdaBonusTotal->setProperty("Value", QString::number(resultado->getBonificacionTotal()));
         fila++;
     }
-    workbook->querySubObject("SaveAs (const QString&)", QString("c:\\pruebas\\report.xlsx"));
+    workbook->querySubObject("SaveAs (const QString&)", QString(path + "\\report.xlsx"));
     workbook->dynamicCall("Close()");
     excel->dynamicCall( "Quit()");
     delete excel;
