@@ -23,6 +23,10 @@ public:
     explicit RefeererDialog(QWidget *parent = 0);
     ~RefeererDialog();
 
+    static bool dorsalMayorQue(const Referee* a1, const Referee* a2) {
+        return a1->dorsal < a2->dorsal;
+    }
+
 public slots:
     void addRefeerer();
     void removeRefeerer();

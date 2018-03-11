@@ -23,14 +23,15 @@ public:
 
     static DataManagement* getInstance();
 
+    void addBonusFem(QString categoria, SPORT_TEST type, Bonus* bonus);
     void addBonus(QString categoria, SPORT_TEST type, Bonus* bonus);
     void addReferee(Referee* referee, QString tag);
     void removeReferee(QString tag);
     SPORT_TEST getTipoPrueba(QString texto);
     CATEGORIAS getTipoCategoria(QString texto);
 
-    double getBonificacion(QString categoria, SPORT_TEST tipo, double mxs);
-    double getBonificacion(QString categoria, SPORT_TEST tipo, int msecs);
+    double getBonificacion(QString categoria, QString sexo, SPORT_TEST tipo, double mxs);
+    double getBonificacion(QString categoria, QString sexo, SPORT_TEST tipo, int msecs);
 
     double calcularBonificacion(QString categoria, SPORT_TEST prueba, QTime tiempo);
 
@@ -42,6 +43,9 @@ public:
 
     QMap<QString, Referee*> refereesMap;
     QMap<QString, QMap<SPORT_TEST, QList<Bonus*>>> bonusMap;
+
+    QMap<QString, QMap<SPORT_TEST, QList<Bonus*>>> bonusFemMap;
+
     QList<QString> tagsProcesando;
 
     int totalLaps = 1;

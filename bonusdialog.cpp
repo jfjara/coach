@@ -39,8 +39,15 @@ void BonusDialog::cargarCategoria(QString categoria)
     ui->_2000Table->setRowCount(0);
     ui->_PCTable->setRowCount(0);
 
+    QString gender = ui->comboBoxGenero->currentText();
+    //QString gender = ui->comboBoxGenero->itemData(ui->comboBoxGenero->currentIndex()).toString();
+    QMap<SPORT_TEST, QList<Bonus*>> map;
+    if (gender == "MASCULINO") {
+        map = DataManagement::getInstance()->bonusMap.value(categoria);
+    } else {
+        map = DataManagement::getInstance()->bonusFemMap.value(categoria);
+    }
 
-    QMap<SPORT_TEST, QList<Bonus*>> map = DataManagement::getInstance()->bonusMap.value(categoria);
     insertListBonusInTable(C6X40, map.value(C6X40));
     insertListBonusInTable(C2000MTS, map.value(C2000MTS));
     insertListBonusInTable(PRUEBA_DE_CAMPO, map.value(PRUEBA_DE_CAMPO));
@@ -52,6 +59,8 @@ void BonusDialog::cargarDatos()
         ui->categoriasCombo->addItem(categoria);
     }
 
+    ui->comboBoxGenero->addItem("MASCULINO");
+    ui->comboBoxGenero->addItem("FEMENINO");
 
 //    insertListBonusInTable(C6X40, DataManagement::getInstance()->bonusMap.value(C6X40));
 //    insertListBonusInTable(C2000MTS, DataManagement::getInstance()->bonusMap.value(C2000MTS));

@@ -32,6 +32,7 @@ class ServerSocket;
 #include "messagedialog.h"
 #include "calibradordialog.h"
 #include "resultadoarbitro.h"
+#include "reportsdialog.h"
 
 namespace Ui {
 class MyCoachMainWindow;
@@ -45,13 +46,13 @@ public:
     explicit MyCoachMainWindow(QWidget *parent = 0);
     ~MyCoachMainWindow();
 
-    static bool promedioMayorQue(const ResultadoArbitro* a1, const ResultadoArbitro* a2) {
+   /* static bool promedioMayorQue(const ResultadoArbitro* a1, const ResultadoArbitro* a2) {
          return a1->getBonificacionTotal() > a2->getBonificacionTotal();
     }
 
     static bool nombreMayorQue(const ResultadoArbitro* a1, const ResultadoArbitro* a2) {
          return a1->arbitro->name > a2->arbitro->name;
-    }
+    }*/
 
 
     ChronoWidget chronometre;
@@ -118,6 +119,8 @@ private:
 
 
     void cargarBonus(QString categoria, QString path);
+    void cargarBonusFem(QString categoria, QString path);
+
     void cargarParticipantes(QString path);
     bool checkearFicherosPruebas(QString path);
 

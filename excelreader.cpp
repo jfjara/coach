@@ -66,17 +66,157 @@ QString ExcelReader::findTagInMap(int dorsal, QMap<int, QString> map)
 
 void ExcelReader::create6x40Report(QString path, QList<ResultadoArbitro*> resultados)
 {
+    QAxObject* excel = new QAxObject( "Excel.Application", 0 );
+    QAxObject* workbooks = excel->querySubObject( "Workbooks" );
+    workbooks->querySubObject( "Open(const QString&)", "c:\\pruebas\\template6x40.xlsx");
+    QAxObject* workbook = excel->querySubObject("ActiveWorkBook");
+    QAxObject* worksheet = workbook->querySubObject("Worksheets(int)", 1);
+    QAxObject* usedrange = worksheet->querySubObject("UsedRange");
+    QAxObject* rows = usedrange->querySubObject("Rows");
+    int intRowStart = PLANTILLA_ARBITROS_FILA_INICIO;
+    int intRows = rows->property("Count").toInt();
 
+    QAxObject * celdaTitulo = excel->querySubObject("Cells(Int, Int)", 4,  5);
+    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS 6x40 METROS ÁRBITROS OFICIALES");
+
+    QAxObject * celdaFecha = excel->querySubObject("Cells(Int, Int)", 4,  18);
+    celdaFecha->setProperty("Value", QDateTime::currentDateTime().toString("dd-MMMM-yy"));
+
+    int fila = 8;
+    for (ResultadoArbitro* resultado : resultados) {
+
+        QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
+        celdaDorsal->setProperty("Value", QString::number(resultado->arbitro->dorsal));
+
+        QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
+        celdaNombre->setProperty("Value", resultado->arbitro->name);
+
+        int seconds = 0;
+        int mseconds = 0;
+
+        for (int i = 0; i < resultado->lista6x40.size(); i++) {
+            QAxObject * celdaC6x40 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_C6x40 + i);
+            seconds = resultado->lista6x40.at(i).second();
+            mseconds = resultado->lista6x40.at(i).msec();
+            celdaC6x40->setProperty("Value", QString::number(seconds) + "," + QString::number(mseconds));
+        }
+        QAxObject * celdaPromedioC6x40 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_PROMEDIO_C6x40);
+        seconds = resultado->promedio.second();
+        mseconds = resultado->promedio.msec();
+        celdaPromedioC6x40->setProperty("Value", QString::number(seconds) + "," + QString::number(mseconds));
+
+        QAxObject * celdaBonusC6x40 = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_BONIFICACION_C6x40);
+        celdaBonusC6x40->setProperty("Value", QString::number(resultado->bonificacion6x40));
+
+        fila++;
+    }
+    workbook->querySubObject("SaveAs (const QString&)", QString(path + "\\report_6x40.xlsx"));
+    workbook->dynamicCall("Close()");
+    excel->dynamicCall( "Quit()");
+    delete excel;
 }
 
 void ExcelReader::create2000Report(QString path, QList<ResultadoArbitro*> resultados)
 {
+    QAxObject* excel = new QAxObject( "Excel.Application", 0 );
+    QAxObject* workbooks = excel->querySubObject( "Workbooks" );
+    workbooks->querySubObject( "Open(const QString&)", "c:\\pruebas\\template2000.xlsx");
+    QAxObject* workbook = excel->querySubObject("ActiveWorkBook");
+    QAxObject* worksheet = workbook->querySubObject("Worksheets(int)", 1);
+    QAxObject* usedrange = worksheet->querySubObject("UsedRange");
+    QAxObject* rows = usedrange->querySubObject("Rows");
+    int intRowStart = PLANTILLA_ARBITROS_FILA_INICIO;
+    int intRows = rows->property("Count").toInt();
 
+    QAxObject * celdaTitulo = excel->querySubObject("Cells(Int, Int)", 4,  5);
+    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS 2000 METROS ÁRBITROS OFICIALES");
+
+    QAxObject * celdaFecha = excel->querySubObject("Cells(Int, Int)", 4,  18);
+    celdaFecha->setProperty("Value", QDateTime::currentDateTime().toString("dd-MMMM-yy"));
+
+    int fila = 8;
+    for (ResultadoArbitro* resultado : resultados) {
+
+        QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
+        celdaDorsal->setProperty("Value", QString::number(resultado->arbitro->dorsal));
+
+        QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
+        celdaNombre->setProperty("Value", resultado->arbitro->name);
+
+        int seconds = 0;
+        int mseconds = 0;
+
+        QAxObject * celdaC2000 = excel->querySubObject("Cells(Int, Int)", fila,  4);
+        celdaC2000->setProperty("Value", QString::number(resultado->getResultado2000()));
+
+        QAxObject * celdaBonusC2000 = excel->querySubObject("Cells(Int, Int)", fila,  5);
+        celdaBonusC2000->setProperty("Value", QString::number(resultado->bonificacion2000));
+
+
+        fila++;
+    }
+    workbook->querySubObject("SaveAs (const QString&)", QString(path + "\\report_2000.xlsx"));
+    workbook->dynamicCall("Close()");
+    excel->dynamicCall( "Quit()");
+    delete excel;
 }
 
 void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultados)
 {
+    QAxObject* excel = new QAxObject( "Excel.Application", 0 );
+    QAxObject* workbooks = excel->querySubObject( "Workbooks" );
+    workbooks->querySubObject( "Open(const QString&)", "c:\\pruebas\\templatePC.xlsx");
+    QAxObject* workbook = excel->querySubObject("ActiveWorkBook");
+    QAxObject* worksheet = workbook->querySubObject("Worksheets(int)", 1);
+    QAxObject* usedrange = worksheet->querySubObject("UsedRange");
+    QAxObject* rows = usedrange->querySubObject("Rows");
+    int intRowStart = PLANTILLA_ARBITROS_FILA_INICIO;
+    int intRows = rows->property("Count").toInt();
 
+    QAxObject * celdaTitulo = excel->querySubObject("Cells(Int, Int)", 4,  5);
+    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS PRUEBA DE CAMPO ÁRBITROS OFICIALES");
+
+    QAxObject * celdaFecha = excel->querySubObject("Cells(Int, Int)", 4,  18);
+    celdaFecha->setProperty("Value", QDateTime::currentDateTime().toString("dd-MMMM-yy"));
+
+    int fila = 8;
+    for (ResultadoArbitro* resultado : resultados) {
+
+        QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
+        celdaDorsal->setProperty("Value", QString::number(resultado->arbitro->dorsal));
+
+        QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
+        celdaNombre->setProperty("Value", resultado->arbitro->name);
+
+        int seconds = 0;
+        int mseconds = 0;
+
+        QAxObject * celdaC2000 = excel->querySubObject("Cells(Int, Int)", fila,  4);
+        celdaC2000->setProperty("Value", QString::number(resultado->getResultado2000()));
+
+        QAxObject * celdaBonusC2000 = excel->querySubObject("Cells(Int, Int)", fila,  5);
+        celdaBonusC2000->setProperty("Value", QString::number(resultado->bonificacion2000));
+
+        QString resultadoPC = "";
+        if (resultado->resultadoPC.minute() > 0) {
+            resultadoPC = QString::number(resultado->resultadoPC.minute()) + ":";
+        }
+        resultadoPC = resultadoPC + QString::number(resultado->resultadoPC.second()) + "," + QString::number(resultado->resultadoPC.msec());
+
+        QAxObject * celdaCPC = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_CPC);
+        celdaCPC->setProperty("Value", resultadoPC);
+
+        QAxObject * celdaBonusCPC = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_BONIFICACION_CPC);
+        celdaBonusCPC->setProperty("Value", QString::number(resultado->bonificacionPC));
+
+        QAxObject * celdaBonusTotal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_TOTAL_BONIFICACION);
+        celdaBonusTotal->setProperty("Value", QString::number(resultado->getBonificacionTotal()));
+        fila++;
+    }
+    workbook->querySubObject("SaveAs (const QString&)", QString(path + "\\report_pc.xlsx"));
+    workbook->dynamicCall("Close()");
+    excel->dynamicCall( "Quit()");
+    delete excel;
 }
 
 
@@ -92,6 +232,13 @@ void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> res
     QAxObject* rows = usedrange->querySubObject("Rows");
     int intRowStart = PLANTILLA_ARBITROS_FILA_INICIO;
     int intRows = rows->property("Count").toInt();
+
+    QAxObject * celdaTitulo = excel->querySubObject("Cells(Int, Int)", 4,  5);
+    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS ÁRBITROS OFICIALES");
+
+    QAxObject * celdaFecha = excel->querySubObject("Cells(Int, Int)", 4,  18);
+    celdaFecha->setProperty("Value", QDateTime::currentDateTime().toString("dd-MMMM-yy"));
+
 
     int fila = 8;
     for (ResultadoArbitro* resultado : resultados) {
@@ -148,7 +295,7 @@ void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> res
 
 }
 
-void ExcelReader::readBonus(QString categoria, QString pathFile)
+void ExcelReader::readBonus(QString categoria, QString sexo, QString pathFile)
 {
     QMap<SPORT_TEST, QList<Bonus*>> bonusCategoria;
     QAxObject* excel = new QAxObject( "Excel.Application", 0 );
@@ -194,8 +341,11 @@ void ExcelReader::readBonus(QString categoria, QString pathFile)
             bonus->timeEnd = variantTFin.toDouble();
 
 
-
-            DataManagement::getInstance()->addBonus(categoria, typeTest, bonus);
+            if (sexo.trimmed().toUpper() == "MASCULINO") {
+                DataManagement::getInstance()->addBonus(categoria, typeTest, bonus);
+            } else {
+                 DataManagement::getInstance()->addBonusFem(categoria, typeTest, bonus);
+            }
 
             //qDebug() << "T.I. " << valueVariant.toString() << " T.F. " <<  variantTFin.toString() << " PTO: " << cariantPtos.toString();
         } else {

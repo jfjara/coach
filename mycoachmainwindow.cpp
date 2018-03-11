@@ -10,15 +10,17 @@ MyCoachMainWindow::MyCoachMainWindow(QWidget *parent) :
     ui->layoutChronometre->addWidget(&chronometre);
 
     QStringList tableHeader;
-    tableHeader << "Vuelta" << "Tiempo vuelta" << "Tiempo total" << "Nombre" << "Categoría";
-    ui->raceTable->setColumnCount(5);
+    tableHeader << "Vuelta" << "Tiempo vuelta" << "Tiempo total" << "Dorsal" << "Nombre" << "Categoría";
+    ui->raceTable->setColumnCount(6);
     ui->raceTable->setHorizontalHeaderLabels(tableHeader);
 
-    ui->raceTable->horizontalHeader()->resizeSection( 0, 60 );
+    ui->raceTable->horizontalHeader()->resizeSection( 0, 70 );
     ui->raceTable->horizontalHeader()->resizeSection( 1, 150 );
     ui->raceTable->horizontalHeader()->resizeSection( 2, 150 );
-    ui->raceTable->horizontalHeader()->resizeSection( 3, 400 );
-    ui->raceTable->horizontalHeader()->resizeSection( 1, 170 );
+    ui->raceTable->horizontalHeader()->resizeSection( 3, 70 );
+    ui->raceTable->horizontalHeader()->resizeSection( 4, 400 );
+    ui->raceTable->horizontalHeader()->resizeSection( 5, 170 );
+
 
 
     dateAndHourTimer.setInterval(1000);
@@ -91,6 +93,14 @@ void MyCoachMainWindow::loadSession()
         cargarBonus("DIVISIONHONORSENIOR", path + "\\bonificaciones.xlsx");
         cargarBonus("PROVINCIAL", path + "\\bonificaciones_provincial.xlsx");
         cargarBonus("NUEVOINGRESO", path + "\\bonificaciones.xlsx");
+
+        cargarBonusFem("OFICIAL", path + "\\bonificaciones_oficial_femenino.xlsx");
+        cargarBonusFem("ASISTENTE2B", path + "\\bonificaciones_femenino.xlsx");
+        cargarBonusFem("3DIVISION", path + "\\bonificaciones_3division_femenino.xlsx");
+        cargarBonusFem("ASISTENTE3DIVISION", path + "\\bonificaciones_femenino.xlsx");
+        cargarBonusFem("DIVISIONHONORSENIOR", path + "\\bonificaciones_femenino.xlsx");
+        cargarBonusFem("PROVINCIAL", path + "\\bonificaciones_provincial_femenino.xlsx");
+        cargarBonusFem("NUEVOINGRESO", path + "\\bonificaciones_femenino.xlsx");
 
 
         // asistente 2b, 3 division, asistente 3 division, division honor senior, provincial, oficial, nuevo ingreso
@@ -297,8 +307,10 @@ void MyCoachMainWindow::addLapRegistry(Referee* referee)
         ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 2, new QTableWidgetItem(referee->laps.at(referee->laps.size() - 1)->timeInit.toString("hh:mm:ss.zzz")));
         //ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 1, new QTableWidgetItem(referee->getTimeLastLap()));
     }
-    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 3, new QTableWidgetItem(referee->name));
-    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 4, new QTableWidgetItem(referee->comarca));
+    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 3, new QTableWidgetItem(referee->dorsal));
+    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 4, new QTableWidgetItem(referee->name));
+    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 5, new QTableWidgetItem(referee->comarca));
+
 
     //TODO: completar comprobaciones de tiempos de las demas pruebas
     if (ui->radio60x40Button->isChecked()) {
@@ -315,13 +327,32 @@ void MyCoachMainWindow::addLapRegistry(Referee* referee)
          }
     }
 
+    //TODO: Colores
+    if (ui->radioPCButton->isChecked()) {
+
+    }
+
+    //TODO: Colores
+    if (ui->radio2000Button->isChecked()) {
+
+    }
+
+
+}
+
+void MyCoachMainWindow::cargarBonusFem(QString categoria, QString filename)
+{
+    //DataManagement::getInstance()->bonusMap.clear();
+    ExcelReader reader;
+    reader.readBonus(categoria, "FEMENINO", QDir::toNativeSeparators(filename));
+    mostrarMensajeCargaBonus();
 }
 
 void MyCoachMainWindow::cargarBonus(QString categoria, QString filename)
 {
     //DataManagement::getInstance()->bonusMap.clear();
     ExcelReader reader;
-    reader.readBonus(categoria, QDir::toNativeSeparators(filename));
+    reader.readBonus(categoria, "MASCULINO", QDir::toNativeSeparators(filename));
     mostrarMensajeCargaBonus();
 }
 
@@ -352,172 +383,24 @@ void MyCoachMainWindow::loadBonusFile()
 
 void MyCoachMainWindow::create6x40Report()
 {
-    if (sessionFilePath == Q_NULLPTR || sessionFilePath.isEmpty()) {
-        return;
-    }
-    SessionManagement session;
-    QMap<int, QList<QTime>> map6x40 = session.loadPrueba(sessionFilePath  + "\\6x40.ses");
 
-    QList<ResultadoArbitro*> resultados;
-    for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
-    {
-        ResultadoArbitro* resultado = new ResultadoArbitro();
-        if (map6x40.contains(arbitro->dorsal)) {
-            resultado->lista6x40 = map6x40.value(arbitro->dorsal);
-        }
-        resultado->arbitro = arbitro;
-        resultados.append(resultado);
-    }
-    if (!resultados.isEmpty()) {
-        for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            for (QTime r : resultado->lista6x40) {
-                msecs += r.second() * 1000 + r.msec();
-            }
-            int msec6x40 = msecs / resultado->lista6x40.size();
-
-            int secsPromedio = (msec6x40 / 1000);
-            int msecPromedio = msec6x40 - (secsPromedio * 1000);
-
-            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
-            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-
-            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
-        }
-        qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::nombreMayorQue);
-
-        ExcelReader reader;
-        reader.create6x40Report(QDir::toNativeSeparators(sessionFilePath), resultados);
-
-        QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de 6x40 en la carpeta de trabajo correctamente.", QMessageBox::Ok);
-    }
 }
 
 void MyCoachMainWindow::create2000Report()
 {
-    if (sessionFilePath == Q_NULLPTR || sessionFilePath.isEmpty()) {
-        return;
-    }
-    SessionManagement session;
-    QMap<int, QList<QTime>> map2000 = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\2000.ses");
 
-    QList<ResultadoArbitro*> resultados;
-    for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
-    {
-        ResultadoArbitro* resultado = new ResultadoArbitro();
-        if (map2000.contains(arbitro->dorsal)) {
-            resultado->resultado2000 = map2000.value(arbitro->dorsal);
-        }
-        resultado->arbitro = arbitro;
-        resultados.append(resultado);
-    }
-    if (!resultados.isEmpty()) {
-        for (ResultadoArbitro* resultado : resultados) {
-            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria,
-                                                                                        C2000MTS, resultado->getResultado2000());
-        }
-        qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::nombreMayorQue);
-
-        ExcelReader reader;
-        reader.create2000Report(QDir::toNativeSeparators(sessionFilePath), resultados);
-
-        QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas de 2000 metros en la carpeta de trabajo correctamente.", QMessageBox::Ok);
-    }
 }
 
 void MyCoachMainWindow::createPCReport()
 {
-    if (sessionFilePath == Q_NULLPTR || sessionFilePath.isEmpty()) {
-        return;
-    }
-    SessionManagement session;
-    QMap<int, QList<QTime>> mapPC = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\pc.ses");
 
-    QList<ResultadoArbitro*> resultados;
-    for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
-    {
-        ResultadoArbitro* resultado = new ResultadoArbitro();
-        if (mapPC.contains(arbitro->dorsal)) {
-            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
-        }
-        resultado->arbitro = arbitro;
-        resultados.append(resultado);
-    }
-    if (!resultados.isEmpty()) {
-        for (ResultadoArbitro* resultado : resultados) {
-            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria,
-                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
-        }
-        qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::nombreMayorQue);
-
-        ExcelReader reader;
-        reader.createPCReport(QDir::toNativeSeparators(sessionFilePath), resultados);
-
-        QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de campo en la carpeta de trabajo correctamente.", QMessageBox::Ok);
-    }
 }
 
 void MyCoachMainWindow::createReport()
 {
-    if (sessionFilePath == Q_NULLPTR || sessionFilePath.isEmpty()) {
-        return;
-    }
-
-    SessionManagement session;
-    QMap<int, QList<QTime>> map6x40 = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\6x40.ses");
-    QMap<int, QList<QTime>> map2000 = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\2000.ses");
-    QMap<int, QList<QTime>> mapPC = session.loadPrueba(QDir::toNativeSeparators(sessionFilePath)  + "\\pc.ses");
-
-    QList<ResultadoArbitro*> resultados;
-    for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
-    {
-        ResultadoArbitro* resultado = new ResultadoArbitro();
-        if (map6x40.contains(arbitro->dorsal)) {
-            resultado->lista6x40 = map6x40.value(arbitro->dorsal);
-        }
-
-        if (map2000.contains(arbitro->dorsal)) {
-            resultado->resultado2000 = map2000.value(arbitro->dorsal);
-        }
-
-        if (mapPC.contains(arbitro->dorsal)) {
-            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
-        }
-        resultado->arbitro = arbitro;
-        resultados.append(resultado);
-    }
-
-    if (!resultados.isEmpty()) {
-        for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            for (QTime r : resultado->lista6x40) {
-                msecs += r.second() * 1000 + r.msec();
-            }            
-            int msec6x40 = msecs / resultado->lista6x40.size();
-
-            int secsPromedio = (msec6x40 / 1000);
-            int msecPromedio = msec6x40 - (secsPromedio * 1000);
-
-            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
-            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-
-            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria,
-                                                                                        C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
-            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria,
-                                                                                        C2000MTS, resultado->getResultado2000());
-
-
-            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria,
-                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
-        }
-        qSort(resultados.begin(), resultados.end(), MyCoachMainWindow::promedioMayorQue);
-
-        ExcelReader reader;
-        reader.createResultsReport(QDir::toNativeSeparators(sessionFilePath), resultados);
-
-        QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
-    }
-
+    ReportsDialog dialog(sessionFilePath, ui->checkBox6x40->isChecked(), ui->checkBox5x40->isChecked(),
+                         ui->checkBox2000->isChecked(), ui->checkBoxPC->isChecked());
+    dialog.exec();
 }
 
 
@@ -562,7 +445,7 @@ void MyCoachMainWindow::receiveTag(QString tag)
                 return;
             }
         } else {
-            if (!referee->isAvailableToRegister(15)) {
+            if (!referee->isAvailableToRegister(60)) {
                 mutex.unlock();
                 return;
             }

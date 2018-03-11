@@ -17,7 +17,7 @@ class ExcelReader
 public:
     ExcelReader();
 
-    void readBonus(QString categoria, QString pathFile);
+    void readBonus(QString categoria, QString sexo, QString pathFile);
     void readReferees(QString pathFile);
     void createResultsReport(QString path, QList<ResultadoArbitro*> resultados);
     void create6x40Report(QString path, QList<ResultadoArbitro*> resultados);

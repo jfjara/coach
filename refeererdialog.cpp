@@ -6,7 +6,7 @@ RefeererDialog::RefeererDialog(QWidget *parent) :
     ui(new Ui::RefeererDialog)
 {
     QStringList tableHeader;
-    tableHeader << "Dorsal" << "Nombre" << "Sexo" << "Comarca" << "Tag";
+    tableHeader << "Dorsal" << "Nombre" << "Sexo" << "Categoría" << "Código de pulsera";
     ui->setupUi(this);
     ui->refeererTable->setColumnCount(5);
     ui->refeererTable->setHorizontalHeaderLabels(tableHeader);
@@ -14,8 +14,8 @@ RefeererDialog::RefeererDialog(QWidget *parent) :
     ui->refeererTable->horizontalHeader()->resizeSection( 0, 60 );
     ui->refeererTable->horizontalHeader()->resizeSection( 1, 250 );
     ui->refeererTable->horizontalHeader()->resizeSection( 2, 100 );
-    ui->refeererTable->horizontalHeader()->resizeSection( 3, 250 );
-    ui->refeererTable->horizontalHeader()->resizeSection( 4, 60 );
+    ui->refeererTable->horizontalHeader()->resizeSection( 3, 120 );
+    ui->refeererTable->horizontalHeader()->resizeSection( 4, 250 );
 
     connect(ui->addButton, SIGNAL(clicked(bool)), this, SLOT(addRefeerer()));
     connect(ui->deleteButton, SIGNAL(clicked(bool)), this, SLOT(removeRefeerer()));
@@ -23,6 +23,7 @@ RefeererDialog::RefeererDialog(QWidget *parent) :
     loadReferees();
 
     ui->addButton->setVisible(false);
+    ui->excelButton->setVisible(false);
 }
 
 RefeererDialog::~RefeererDialog()
@@ -45,7 +46,7 @@ void RefeererDialog::loadExcel()
 
 void RefeererDialog::loadReferees()
 {
-
+    qSort(DataManagement::getInstance()->refereesMap.values().begin(),  DataManagement::getInstance()->refereesMap.values().end(),RefeererDialog::dorsalMayorQue);
     for (Referee* e : DataManagement::getInstance()->refereesMap.values()) {
         insertRefereeInTable(e);
     }
@@ -57,7 +58,7 @@ void RefeererDialog::insertRefereeInTable(Referee* referee)
     ui->refeererTable->setItem(ui->refeererTable->rowCount() - 1, 0, new QTableWidgetItem(QString::number(referee->dorsal)));
     ui->refeererTable->setItem(ui->refeererTable->rowCount() - 1, 1, new QTableWidgetItem(referee->name));
     ui->refeererTable->setItem(ui->refeererTable->rowCount() - 1, 2, new QTableWidgetItem(referee->gender));
-    ui->refeererTable->setItem(ui->refeererTable->rowCount() - 1, 3, new QTableWidgetItem(referee->comarca));
+    ui->refeererTable->setItem(ui->refeererTable->rowCount() - 1, 3, new QTableWidgetItem(referee->categoria));
     ui->refeererTable->setItem(ui->refeererTable->rowCount() - 1, 4, new QTableWidgetItem(referee->tag));
 }
 

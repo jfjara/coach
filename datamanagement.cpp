@@ -170,24 +170,69 @@ void DataManagement::addBonus(QString categoria, SPORT_TEST type, Bonus* bonus)
     }
 }
 
-double DataManagement::getBonificacion(QString categoria, SPORT_TEST tipo, double mxs)
+void DataManagement::addBonusFem(QString categoria, SPORT_TEST type, Bonus* bonus)
 {
-    if (bonusMap.contains(categoria)) {
 
-        QList<Bonus*> bonus = bonusMap.value(categoria).value(tipo);
+    if (bonusFemMap.contains(categoria)) {
+        QMap<SPORT_TEST, QList<Bonus*>> map = bonusFemMap.value(categoria);
+        if (map.contains(type)) {
+            QList<Bonus*> bonusList = map.value(type);
+            bonusList.push_back(bonus);
+            map.insert(type, bonusList);
+            bonusFemMap.insert(categoria, map);
+            //insertBonus(type, bonus);
+        } else {
+            QList<Bonus*> listaBonus;
+            listaBonus.push_back(bonus);
+            map.insert(type, listaBonus);
+            bonusFemMap.insert(categoria, map);
+            //createBonusCategory(type);
+            //insertBonus(type, bonus);
+        }
+    } else {
+        QMap<SPORT_TEST, QList<Bonus*>> map;
+        QList<Bonus*> listaBonus;
+        listaBonus.push_back(bonus);
+        map.insert(type, listaBonus);
+        bonusFemMap.insert(categoria, map);
+    }
+}
 
-        int i = 0;
-        while (i < bonus.size()) {
-            if (bonus.at(i)->timeEnd >= mxs && bonus.at(i)->timeInit <= mxs) {
-                return bonus.at(i)->points;
+double DataManagement::getBonificacion(QString categoria, QString sexo, SPORT_TEST tipo, double mxs)
+{
+    if (sexo.trimmed().toUpper() == "MASCULINO") {
+
+        if (bonusMap.contains(categoria)) {
+
+            QList<Bonus*> bonus = bonusMap.value(categoria).value(tipo);
+
+            int i = 0;
+            while (i < bonus.size()) {
+                if (bonus.at(i)->timeEnd >= mxs && bonus.at(i)->timeInit <= mxs) {
+                    return bonus.at(i)->points;
+                }
+                i++;
             }
-            i++;
+        }
+    } else {
+        if (bonusFemMap.contains(categoria)) {
+
+            QList<Bonus*> bonus = bonusFemMap.value(categoria).value(tipo);
+
+            int i = 0;
+            while (i < bonus.size()) {
+                if (bonus.at(i)->timeEnd >= mxs && bonus.at(i)->timeInit <= mxs) {
+                    return bonus.at(i)->points;
+                }
+                i++;
+            }
         }
     }
     return 0.0;
+
 }
 
-double DataManagement::getBonificacion(QString categoria, SPORT_TEST tipo, int msecs)
+double DataManagement::getBonificacion(QString categoria, QString sexo, SPORT_TEST tipo, int msecs)
 {
 
     if (bonusMap.contains(categoria)) {
