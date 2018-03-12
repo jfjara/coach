@@ -29,6 +29,28 @@ public:
     bool p2000;
     bool pc;
 
+    /*cargarBonus("OFICIAL", path + "\\bonificaciones_oficial.xlsx");
+    cargarBonus("ASISTENTE2B", path + "\\bonificaciones.xlsx");
+    cargarBonus("3DIVISION", path + "\\bonificaciones_3division.xlsx");
+    cargarBonus("ASISTENTE3DIVISION", path + "\\bonificaciones.xlsx");
+    cargarBonus("DIVISIONHONORSENIOR", path + "\\bonificaciones.xlsx");
+    cargarBonus("PROVINCIAL", path + "\\bonificaciones_provincial.xlsx");
+    cargarBonus("NUEVOINGRESO", path + "\\bonificaciones.xlsx");
+
+    QList<ResultadoArbitro*> extraerOficiales(QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> extraerAsistente2B(QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> extraer3Division(QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> extraerasistente3Division(QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> extraerDivisionHonorSenior(QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> extraerOficiales(QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> extraerOficiales(QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> extraerOficiales(QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> extraerOficiales(QList<ResultadoArbitro*> resultados);*/
+
+    void crearInformesCategorias(QString categoria);
+    void crearInformeCategoria(QString categoria,  QList<ResultadoArbitro*> resultados);
+    QList<ResultadoArbitro*> filtrarResultados(QString categoria,  QList<ResultadoArbitro*> lista);
+
     static bool promedioMayorQue(const ResultadoArbitro* a1, const ResultadoArbitro* a2) {
          return a1->getBonificacionTotal() > a2->getBonificacionTotal();
     }

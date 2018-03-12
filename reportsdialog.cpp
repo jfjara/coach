@@ -103,13 +103,114 @@ void ReportsDialog::createReport6x40()
             qSort(resultados.begin(), resultados.end(), ReportsDialog::promedio6x40MayorQue);
         }
 
-
-
         ExcelReader reader;
         reader.create6x40Report(QDir::toNativeSeparators(path), resultados);
-
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de 6x40 en la carpeta de trabajo correctamente.", QMessageBox::Ok);
-    }\
+    }
+}
+
+QList<ResultadoArbitro*> ReportsDialog::filtrarResultados(QString categoria, QList<ResultadoArbitro*> lista)
+{
+    QList<ResultadoArbitro*> filtrado;
+    for (ResultadoArbitro* resultado : lista) {
+        if (resultado->arbitro->categoria.trimmed().toUpper() == categoria) {
+            filtrado.append(resultado);
+        }
+    }
+    return filtrado;
+}
+
+void ReportsDialog::crearInformesCategorias(QString categoria)
+{
+    SessionManagement session;
+    QMap<int, QList<QTime>> map6x40 = session.loadPrueba(QDir::toNativeSeparators(path)  + "\\6x40.ses");
+    QMap<int, QList<QTime>> map2000 = session.loadPrueba(QDir::toNativeSeparators(path)  + "\\2000.ses");
+    QMap<int, QList<QTime>> mapPC = session.loadPrueba(QDir::toNativeSeparators(path)  + "\\pc.ses");
+
+    QList<ResultadoArbitro*> resultados;
+    for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
+    {
+        ResultadoArbitro* resultado = new ResultadoArbitro();
+        if (map6x40.contains(arbitro->dorsal)) {
+            resultado->lista6x40 = map6x40.value(arbitro->dorsal);
+        }
+
+        if (map2000.contains(arbitro->dorsal)) {
+            resultado->resultado2000 = map2000.value(arbitro->dorsal);
+        }
+
+        if (mapPC.contains(arbitro->dorsal)) {
+            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+        }
+        resultado->arbitro = arbitro;
+        resultados.append(resultado);
+    }
+
+    if (!resultados.isEmpty()) {
+        for (ResultadoArbitro* resultado : resultados) {
+            int msecs = 0;
+            for (QTime r : resultado->lista6x40) {
+                msecs += r.second() * 1000 + r.msec();
+            }
+            int msec6x40 = msecs / resultado->lista6x40.size();
+
+            int secsPromedio = (msec6x40 / 1000);
+            int msecPromedio = msec6x40 - (secsPromedio * 1000);
+
+            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
+            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
+
+            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                        C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
+            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                        C2000MTS, resultado->getResultado2000());
+
+
+            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+        }
+    }
+
+    crearInformeCategoria("OFICIAL", resultados);
+    crearInformeCategoria("ASISTENTE2B", resultados);
+    crearInformeCategoria("3DIVISION", resultados);
+    crearInformeCategoria("ASISTENTE3DIVISION", resultados);
+    crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
+    crearInformeCategoria("PROVINCIAL", resultados);
+    crearInformeCategoria("NUEVOINGRESO", resultados);
+}
+
+void ReportsDialog::crearInformeCategoria(QString categoria,  QList<ResultadoArbitro*> resultados)
+{
+
+    QList<ResultadoArbitro*> filtrados = filtrarResultados(categoria, resultados);
+    if (filtrados.isEmpty()) {
+        return;
+    }
+    if (ui->radioButtonOrderDorsal->isChecked()) {
+        qSort(filtrados.begin(), filtrados.end(), ReportsDialog::dorsalMayorQue);
+    } else if (ui->radioButtonOrderNombre->isChecked()) {
+        qSort(filtrados.begin(), filtrados.end(), ReportsDialog::nombreMayorQue);
+    } else if (ui->radioButtonOrderResultado->isChecked()) {
+        qSort(filtrados.begin(), filtrados.end(), ReportsDialog::promedioMayorQue);
+    }
+
+    ExcelReader reader;
+
+    if (ui->totalRadio->isChecked()) {
+
+    } else if (ui->p6x40Radio->isChecked()) {
+
+    } else if (ui->p5x40Radio->isChecked()) {
+
+    } else if (ui->p2000Radio->isChecked()) {
+
+    } else if (ui->pcRadio->isChecked()) {
+
+    }
+
+    //reader.createResultsReport(QDir::toNativeSeparators(path), filtrados);
+
 }
 
 void ReportsDialog::createReportTotal()
@@ -180,6 +281,10 @@ void ReportsDialog::createReportTotal()
     }
 
 }
+
+//TODO: add 5x40
+// titulos de categorias
+// terminar el informe separado de categorias
 
 void ReportsDialog::createReport5x40()
 {
