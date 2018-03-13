@@ -6,6 +6,33 @@ ExcelReader::ExcelReader()
 
 }
 
+QString ExcelReader::getTitulo(QString categoria)
+{
+    QString resultado = "";
+    if (categoria == "OFICIAL") {
+        resultado = "OFICIALES";
+    }
+    if (categoria == "ASISTENTE2B") {
+        resultado = "ASISTENTES 2ªB";
+    }
+    if (categoria == "3DIVISION") {
+        resultado = "3ª DIVISION";
+    }
+    if (categoria == "ASISTENTE3DIVISION") {
+        resultado = "ASISTENTES 3ª DIVISION";
+    }
+    if (categoria == "DIVISIONHONORSENIOR") {
+        resultado = "DIVISION DE HONOR SENIOR";
+    }
+    if (categoria == "PROVINCIAL") {
+        resultado = "PROVINCIALES";
+    }
+    if (categoria == "NUEVOINGRESO") {
+        resultado = "DE NUEVO INGRESO";
+    }
+    return resultado;
+}
+
 void ExcelReader::readReferees(QString pathFile)
 {
     QAxObject* excel = new QAxObject( "Excel.Application", 0 );
@@ -64,7 +91,7 @@ QString ExcelReader::findTagInMap(int dorsal, QMap<int, QString> map)
     return map.value(dorsal);
 }
 
-void ExcelReader::create6x40Report(QString path, QList<ResultadoArbitro*> resultados)
+void ExcelReader::create6x40Report(QString path, QList<ResultadoArbitro*> resultados, QString categoria)
 {
     QAxObject* excel = new QAxObject( "Excel.Application", 0 );
     QAxObject* workbooks = excel->querySubObject( "Workbooks" );
@@ -77,7 +104,7 @@ void ExcelReader::create6x40Report(QString path, QList<ResultadoArbitro*> result
     int intRows = rows->property("Count").toInt();
 
     QAxObject * celdaTitulo = excel->querySubObject("Cells(Int, Int)", 4,  5);
-    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS 6x40 METROS ÁRBITROS OFICIALES");
+    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS 6x40 METROS ÁRBITROS " + getTitulo(categoria));
 
     QAxObject * celdaFecha = excel->querySubObject("Cells(Int, Int)", 4,  18);
     celdaFecha->setProperty("Value", QDateTime::currentDateTime().toString("dd-MMMM-yy"));
@@ -110,13 +137,13 @@ void ExcelReader::create6x40Report(QString path, QList<ResultadoArbitro*> result
 
         fila++;
     }
-    workbook->querySubObject("SaveAs (const QString&)", QString(path + "\\report_6x40.xlsx"));
+    workbook->querySubObject("SaveAs (const QString&)", path);
     workbook->dynamicCall("Close()");
     excel->dynamicCall( "Quit()");
     delete excel;
 }
 
-void ExcelReader::create2000Report(QString path, QList<ResultadoArbitro*> resultados)
+void ExcelReader::create2000Report(QString path, QList<ResultadoArbitro*> resultados, QString categoria)
 {
     QAxObject* excel = new QAxObject( "Excel.Application", 0 );
     QAxObject* workbooks = excel->querySubObject( "Workbooks" );
@@ -129,7 +156,7 @@ void ExcelReader::create2000Report(QString path, QList<ResultadoArbitro*> result
     int intRows = rows->property("Count").toInt();
 
     QAxObject * celdaTitulo = excel->querySubObject("Cells(Int, Int)", 4,  5);
-    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS 2000 METROS ÁRBITROS OFICIALES");
+    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS 2000 METROS ÁRBITROS " +getTitulo(categoria));
 
     QAxObject * celdaFecha = excel->querySubObject("Cells(Int, Int)", 4,  18);
     celdaFecha->setProperty("Value", QDateTime::currentDateTime().toString("dd-MMMM-yy"));
@@ -155,13 +182,13 @@ void ExcelReader::create2000Report(QString path, QList<ResultadoArbitro*> result
 
         fila++;
     }
-    workbook->querySubObject("SaveAs (const QString&)", QString(path + "\\report_2000.xlsx"));
+    workbook->querySubObject("SaveAs (const QString&)", path);
     workbook->dynamicCall("Close()");
     excel->dynamicCall( "Quit()");
     delete excel;
 }
 
-void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultados)
+void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultados, QString categoria)
 {
     QAxObject* excel = new QAxObject( "Excel.Application", 0 );
     QAxObject* workbooks = excel->querySubObject( "Workbooks" );
@@ -174,7 +201,7 @@ void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultad
     int intRows = rows->property("Count").toInt();
 
     QAxObject * celdaTitulo = excel->querySubObject("Cells(Int, Int)", 4,  5);
-    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS PRUEBA DE CAMPO ÁRBITROS OFICIALES");
+    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS PRUEBA DE CAMPO ÁRBITROS " + getTitulo(categoria));
 
     QAxObject * celdaFecha = excel->querySubObject("Cells(Int, Int)", 4,  18);
     celdaFecha->setProperty("Value", QDateTime::currentDateTime().toString("dd-MMMM-yy"));
@@ -213,14 +240,14 @@ void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultad
         celdaBonusTotal->setProperty("Value", QString::number(resultado->getBonificacionTotal()));
         fila++;
     }
-    workbook->querySubObject("SaveAs (const QString&)", QString(path + "\\report_pc.xlsx"));
+    workbook->querySubObject("SaveAs (const QString&)", path);
     workbook->dynamicCall("Close()");
     excel->dynamicCall( "Quit()");
     delete excel;
 }
 
 
-void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> resultados)
+void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> resultados, QString categoria)
 {
 
     QAxObject* excel = new QAxObject( "Excel.Application", 0 );
@@ -234,7 +261,7 @@ void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> res
     int intRows = rows->property("Count").toInt();
 
     QAxObject * celdaTitulo = excel->querySubObject("Cells(Int, Int)", 4,  5);
-    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS ÁRBITROS OFICIALES");
+    celdaTitulo->setProperty("Value", "RESULTADOS DE PRUEBAS FÍSICAS ÁRBITROS " + getTitulo(categoria));
 
     QAxObject * celdaFecha = excel->querySubObject("Cells(Int, Int)", 4,  18);
     celdaFecha->setProperty("Value", QDateTime::currentDateTime().toString("dd-MMMM-yy"));
@@ -288,7 +315,7 @@ void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> res
         celdaBonusTotal->setProperty("Value", QString::number(resultado->getBonificacionTotal()));
         fila++;
     }
-    workbook->querySubObject("SaveAs (const QString&)", QString(path + "\\report.xlsx"));
+    workbook->querySubObject("SaveAs (const QString&)", path);
     workbook->dynamicCall("Close()");
     excel->dynamicCall( "Quit()");
     delete excel;

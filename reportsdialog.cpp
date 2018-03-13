@@ -47,16 +47,29 @@ void ReportsDialog::cancel()
 
 void ReportsDialog::createReport()
 {
-    if (ui->totalRadio->isChecked()) {
-        createReportTotal();
-    } else if (ui->p6x40Radio->isChecked()) {
-        createReport6x40();
-    } else if (ui->p5x40Radio->isChecked()) {
-        createReport5x40();
-    } else if (ui->p2000Radio->isChecked()) {
-        createReport2000();
-    } else if (ui->pcRadio->isChecked()) {
-        createReportPC();
+    if (!ui->separarCatCheck->isChecked()) {
+        if (ui->totalRadio->isChecked()) {
+            createReportTotal();
+        } else if (ui->p6x40Radio->isChecked()) {
+            createReport6x40();
+        } else if (ui->p5x40Radio->isChecked()) {
+            createReport5x40();
+        } else if (ui->p2000Radio->isChecked()) {
+            createReport2000();
+        } else if (ui->pcRadio->isChecked()) {
+            createReportPC();
+        }
+    } else {
+        if (ui->totalRadio->isChecked()) {
+            createReportCategoriaTotal();
+        } else if (ui->p6x40Radio->isChecked()) {
+            createReportCategoria6x40();
+        } else if (ui->p5x40Radio->isChecked()) {
+        } else if (ui->p2000Radio->isChecked()) {
+            createReportCategoria2000();
+        } else if (ui->pcRadio->isChecked()) {
+            createReportCategoriaPC();
+        }
     }
 }
 
@@ -104,7 +117,7 @@ void ReportsDialog::createReport6x40()
         }
 
         ExcelReader reader;
-        reader.create6x40Report(QDir::toNativeSeparators(path), resultados);
+        reader.create6x40Report(QDir::toNativeSeparators(path + "\\resultados_6x40.xlsx"), resultados, "");
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de 6x40 en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
 }
@@ -120,7 +133,7 @@ QList<ResultadoArbitro*> ReportsDialog::filtrarResultados(QString categoria, QLi
     return filtrado;
 }
 
-void ReportsDialog::crearInformesCategorias(QString categoria)
+void ReportsDialog::createReportCategoriaTotal()
 {
     SessionManagement session;
     QMap<int, QList<QTime>> map6x40 = session.loadPrueba(QDir::toNativeSeparators(path)  + "\\6x40.ses");
@@ -178,6 +191,129 @@ void ReportsDialog::crearInformesCategorias(QString categoria)
     crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
     crearInformeCategoria("PROVINCIAL", resultados);
     crearInformeCategoria("NUEVOINGRESO", resultados);
+
+    QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
+}
+
+void ReportsDialog::createReportCategoria6x40()
+{
+    SessionManagement session;
+    QMap<int, QList<QTime>> map6x40 = session.loadPrueba(QDir::toNativeSeparators(path)  + "\\6x40.ses");
+
+    QList<ResultadoArbitro*> resultados;
+    for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
+    {
+        ResultadoArbitro* resultado = new ResultadoArbitro();
+        if (map6x40.contains(arbitro->dorsal)) {
+            resultado->lista6x40 = map6x40.value(arbitro->dorsal);
+        }
+        resultado->arbitro = arbitro;
+        resultados.append(resultado);
+    }
+
+    if (!resultados.isEmpty()) {
+        for (ResultadoArbitro* resultado : resultados) {
+            int msecs = 0;
+            for (QTime r : resultado->lista6x40) {
+                msecs += r.second() * 1000 + r.msec();
+            }
+            int msec6x40 = msecs / resultado->lista6x40.size();
+
+            int secsPromedio = (msec6x40 / 1000);
+            int msecPromedio = msec6x40 - (secsPromedio * 1000);
+
+            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
+            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
+
+            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                        C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
+         }
+    }
+
+    crearInformeCategoria("OFICIAL", resultados);
+    crearInformeCategoria("ASISTENTE2B", resultados);
+    crearInformeCategoria("3DIVISION", resultados);
+    crearInformeCategoria("ASISTENTE3DIVISION", resultados);
+    crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
+    crearInformeCategoria("PROVINCIAL", resultados);
+    crearInformeCategoria("NUEVOINGRESO", resultados);
+
+    QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
+}
+
+void ReportsDialog::createReportCategoria2000()
+{
+    SessionManagement session;
+
+    QMap<int, QList<QTime>> map2000 = session.loadPrueba(QDir::toNativeSeparators(path)  + "\\2000.ses");
+
+    QList<ResultadoArbitro*> resultados;
+    for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
+    {
+        ResultadoArbitro* resultado = new ResultadoArbitro();
+
+        if (map2000.contains(arbitro->dorsal)) {
+            resultado->resultado2000 = map2000.value(arbitro->dorsal);
+        }
+
+        resultado->arbitro = arbitro;
+        resultados.append(resultado);
+    }
+
+    if (!resultados.isEmpty()) {
+        for (ResultadoArbitro* resultado : resultados) {
+            int msecs = 0;
+            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                        C2000MTS, resultado->getResultado2000());
+        }
+    }
+
+    crearInformeCategoria("OFICIAL", resultados);
+    crearInformeCategoria("ASISTENTE2B", resultados);
+    crearInformeCategoria("3DIVISION", resultados);
+    crearInformeCategoria("ASISTENTE3DIVISION", resultados);
+    crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
+    crearInformeCategoria("PROVINCIAL", resultados);
+    crearInformeCategoria("NUEVOINGRESO", resultados);
+
+    QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
+}
+
+void ReportsDialog::createReportCategoriaPC()
+{
+    SessionManagement session;
+    QMap<int, QList<QTime>> mapPC = session.loadPrueba(QDir::toNativeSeparators(path)  + "\\pc.ses");
+
+    QList<ResultadoArbitro*> resultados;
+    for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
+    {
+        ResultadoArbitro* resultado = new ResultadoArbitro();
+
+        if (mapPC.contains(arbitro->dorsal)) {
+            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+        }
+        resultado->arbitro = arbitro;
+        resultados.append(resultado);
+    }
+
+    if (!resultados.isEmpty()) {
+        for (ResultadoArbitro* resultado : resultados) {
+            int msecs = 0;
+
+            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+        }
+    }
+
+    crearInformeCategoria("OFICIAL", resultados);
+    crearInformeCategoria("ASISTENTE2B", resultados);
+    crearInformeCategoria("3DIVISION", resultados);
+    crearInformeCategoria("ASISTENTE3DIVISION", resultados);
+    crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
+    crearInformeCategoria("PROVINCIAL", resultados);
+    crearInformeCategoria("NUEVOINGRESO", resultados);
+
+    QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
 }
 
 void ReportsDialog::crearInformeCategoria(QString categoria,  QList<ResultadoArbitro*> resultados)
@@ -198,15 +334,15 @@ void ReportsDialog::crearInformeCategoria(QString categoria,  QList<ResultadoArb
     ExcelReader reader;
 
     if (ui->totalRadio->isChecked()) {
-
+        reader.createResultsReport(QDir::toNativeSeparators(path + "\\" + categoria + "_resultados.xlsx"), filtrados, categoria);
     } else if (ui->p6x40Radio->isChecked()) {
-
+        reader.create6x40Report(QDir::toNativeSeparators(path + "\\" + categoria + "_6x40.xlsx"), filtrados, categoria);
     } else if (ui->p5x40Radio->isChecked()) {
 
     } else if (ui->p2000Radio->isChecked()) {
-
+        reader.create2000Report(QDir::toNativeSeparators(path + "\\" + categoria + "_2000.xlsx"), filtrados, categoria);
     } else if (ui->pcRadio->isChecked()) {
-
+        reader.createPCReport(QDir::toNativeSeparators(path + "\\" + categoria + "_pruebaCampo.xlsx"), filtrados, categoria);
     }
 
     //reader.createResultsReport(QDir::toNativeSeparators(path), filtrados);
@@ -275,7 +411,7 @@ void ReportsDialog::createReportTotal()
         }
 
         ExcelReader reader;
-        reader.createResultsReport(QDir::toNativeSeparators(path), resultados);
+        reader.createResultsReport(QDir::toNativeSeparators(path + "\\resultados.xlsx"), resultados, "");
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
@@ -285,6 +421,7 @@ void ReportsDialog::createReportTotal()
 //TODO: add 5x40
 // titulos de categorias
 // terminar el informe separado de categorias
+// rutas
 
 void ReportsDialog::createReport5x40()
 {
@@ -324,7 +461,7 @@ void ReportsDialog::createReport2000()
         }
 
         ExcelReader reader;
-        reader.create2000Report(QDir::toNativeSeparators(path), resultados);
+        reader.create2000Report(QDir::toNativeSeparators(path + "\\resultados_2000.xlsx"), resultados, "");
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas de 2000 metros en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
@@ -362,7 +499,7 @@ void ReportsDialog::createReportPC()
         }
 
         ExcelReader reader;
-        reader.createPCReport(QDir::toNativeSeparators(path), resultados);
+        reader.createPCReport(QDir::toNativeSeparators(path + "\\resultados_pruebaCampo.xlsx"), resultados, "");
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de campo en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
