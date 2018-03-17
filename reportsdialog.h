@@ -61,6 +61,8 @@ public:
          return a1->bonificacionPC > a2->bonificacionPC;
     }
 
+    bool estaApta(SPORT_TEST tipo, ResultadoArbitro* resultado);
+    void calcularPromedioC6x40(ResultadoArbitro* resultado);
 
 public slots:
 

@@ -87,21 +87,24 @@ void MyCoachMainWindow::loadSession()
 
     if (path !=Q_NULLPTR && !path.isEmpty()) {
         cargarBonus("OFICIAL", path + "\\bonificaciones_oficial.xlsx");
-        cargarBonus("ASISTENTE2B", path + "\\bonificaciones.xlsx");
+        cargarBonus("ASISTENTE2B", path + "\\bonificaciones_asistente2b.xlsx");
         cargarBonus("3DIVISION", path + "\\bonificaciones_3division.xlsx");
-        cargarBonus("ASISTENTE3DIVISION", path + "\\bonificaciones.xlsx");
-        cargarBonus("DIVISIONHONORSENIOR", path + "\\bonificaciones.xlsx");
+        cargarBonus("ASISTENTE3DIVISION", path + "\\bonificaciones_asistente3division.xlsx");
+        cargarBonus("DIVISIONHONORSENIOR", path + "\\bonificaciones_divisionhonorsenior.xlsx");
         cargarBonus("PROVINCIAL", path + "\\bonificaciones_provincial.xlsx");
-        cargarBonus("NUEVOINGRESO", path + "\\bonificaciones.xlsx");
+        cargarBonus("NUEVOINGRESO", path + "\\bonificaciones_nuevoingreso.xlsx");
+        cargarBonus("FORMADORES", path + "\\bonificaciones_formadores.xlsx");
+        cargarBonus("FUTBOLSALA", path + "\\bonificaciones_futbolsala.xlsx");
 
         cargarBonusFem("OFICIAL", path + "\\bonificaciones_oficial_femenino.xlsx");
-        cargarBonusFem("ASISTENTE2B", path + "\\bonificaciones_femenino.xlsx");
+        cargarBonusFem("ASISTENTE2B", path + "\\bonificaciones_asistente2b_femenino.xlsx");
         cargarBonusFem("3DIVISION", path + "\\bonificaciones_3division_femenino.xlsx");
-        cargarBonusFem("ASISTENTE3DIVISION", path + "\\bonificaciones_femenino.xlsx");
-        cargarBonusFem("DIVISIONHONORSENIOR", path + "\\bonificaciones_femenino.xlsx");
+        cargarBonusFem("ASISTENTE3DIVISION", path + "\\bonificaciones_asistente3division_femenino.xlsx");
+        cargarBonusFem("DIVISIONHONORSENIOR", path + "\\bonificaciones_divisionhonorsenior_femenino.xlsx");
         cargarBonusFem("PROVINCIAL", path + "\\bonificaciones_provincial_femenino.xlsx");
-        cargarBonusFem("NUEVOINGRESO", path + "\\bonificaciones_femenino.xlsx");
-
+        cargarBonusFem("NUEVOINGRESO", path + "\\bonificaciones_nuevoingreso_femenino.xlsx");
+        cargarBonusFem("FORMADORES", path + "\\bonificaciones_formadores_femenino.xlsx");
+        cargarBonusFem("FUTBOLSALA", path + "\\bonificaciones_futbolsala_femenino.xlsx");
 
         // asistente 2b, 3 division, asistente 3 division, division honor senior, provincial, oficial, nuevo ingreso
         cargarParticipantes(path + "\\participantes.xlsx");
@@ -115,6 +118,12 @@ void MyCoachMainWindow::loadSession()
             ui->reportButton->setEnabled(true);
         } else {
             ui->reportButton->setDisabled(false);
+        }
+
+        ui->folderLabel->setText(sessionFilePath);
+
+        if (!QDir(QDir::toNativeSeparators(sessionFilePath + "\\resultados\\")).exists()) {
+            QDir().mkdir(QDir::toNativeSeparators(sessionFilePath + "\\resultados\\"));
         }
 
         QMessageBox::information(this, "Datos correctamente cargados", "Se han cargados los ficheros de bonificaciones y participantes correctamente", QMessageBox::Ok);

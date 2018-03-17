@@ -74,6 +74,54 @@ void ReportsDialog::createReport()
     }
 }
 
+bool ReportsDialog::estaApta(SPORT_TEST tipo, ResultadoArbitro* resultado)
+{
+    if (tipo == C6X40) {
+        if (resultado->lista6x40.size() < 6) {
+            resultado->apto6x40 = false;
+            return false;
+        }
+    }
+    if (tipo == C5X40) {
+        if (resultado->lista6x40.size() < 5) {
+            resultado->apto5x40 = false;
+            return false;
+        }
+    }
+    if (tipo == C2000MTS) {
+        if (resultado->resultado2000.size() < 6) {
+            resultado->apto2000= false;
+            return false;
+        }
+    }
+    if (tipo == PRUEBA_DE_CAMPO) {
+        if (resultado->resultadosPC.size() < 2) {
+            resultado->aptoPC= false;
+            return false;
+        }
+    }
+    return true;
+}
+
+void ReportsDialog::calcularPromedioC6x40(ResultadoArbitro* resultado)
+{
+    int msecs = 0;
+    for (QTime r : resultado->lista6x40) {
+        msecs += r.second() * 1000 + r.msec();
+    }
+    int msec6x40 = 0;
+    if (resultado->lista6x40.size() > 0) {
+        msec6x40 = msecs / resultado->lista6x40.size();
+    }
+
+    int secsPromedio = (msec6x40 / 1000);
+    int msecPromedio = msec6x40 - (secsPromedio * 1000);
+
+    resultado->promedio = resultado->promedio.addSecs(secsPromedio);
+    resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
+    resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender, C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
+}
+
 void ReportsDialog::createReport6x40()
 {
     if (path == Q_NULLPTR || path.isEmpty()) {
@@ -94,19 +142,10 @@ void ReportsDialog::createReport6x40()
     }
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            for (QTime r : resultado->lista6x40) {
-                msecs += r.second() * 1000 + r.msec();
+
+            if (estaApta(C6X40, resultado)) {
+                calcularPromedioC6x40(resultado);
             }
-            int msec6x40 = msecs / resultado->lista6x40.size();
-
-            int secsPromedio = (msec6x40 / 1000);
-            int msecPromedio = msec6x40 - (secsPromedio * 1000);
-
-            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
-            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-
-            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender, C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
         }
 
         if (ui->radioButtonOrderDorsal->isChecked()) {
@@ -118,7 +157,7 @@ void ReportsDialog::createReport6x40()
         }
 
         ExcelReader reader;
-        reader.create6x40Report(QDir::toNativeSeparators(path + "\\resultados_6x40.xlsx"), resultados, "");
+        reader.create6x40Report(QDir::toNativeSeparators(path + "\\resultados\\resultados_6x40.xlsx"), resultados, "");
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de 6x40 en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
 }
@@ -143,7 +182,7 @@ void ReportsDialog::createReportCategoriaTotal()
 
     QList<ResultadoArbitro*> resultados;
     for (Referee* arbitro : DataManagement::getInstance()->refereesMap.values())
-    {
+    {        
         ResultadoArbitro* resultado = new ResultadoArbitro();
         if (map6x40.contains(arbitro->dorsal)) {
             resultado->lista6x40 = map6x40.value(arbitro->dorsal);
@@ -154,7 +193,10 @@ void ReportsDialog::createReportCategoriaTotal()
         }
 
         if (mapPC.contains(arbitro->dorsal)) {
-            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            resultado->resultadosPC = mapPC.value(arbitro->dorsal);
+            if (resultado->resultadosPC.size() > 1) {
+                resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            }
         }
         resultado->arbitro = arbitro;
         resultados.append(resultado);
@@ -162,26 +204,17 @@ void ReportsDialog::createReportCategoriaTotal()
 
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            for (QTime r : resultado->lista6x40) {
-                msecs += r.second() * 1000 + r.msec();
+            if (estaApta(C6X40, resultado)) {
+                calcularPromedioC6x40(resultado);
             }
-            int msec6x40 = msecs / resultado->lista6x40.size();
-
-            int secsPromedio = (msec6x40 / 1000);
-            int msecPromedio = msec6x40 - (secsPromedio * 1000);
-
-            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
-            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-
-            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
-                                                                                        C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
-            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+            if (estaApta(C2000MTS, resultado)) {
+                resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
                                                                                         C2000MTS, resultado->getResultado2000());
-
-
-            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
-                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+            }
+            if (estaApta(PRUEBA_DE_CAMPO, resultado)) {
+                resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                          PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+            }
         }
     }
 
@@ -192,6 +225,9 @@ void ReportsDialog::createReportCategoriaTotal()
     crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
     crearInformeCategoria("PROVINCIAL", resultados);
     crearInformeCategoria("NUEVOINGRESO", resultados);
+    crearInformeCategoria("FORMADORES", resultados);
+    crearInformeCategoria("FUTBOLSALA", resultados);
+
 
     QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
 }
@@ -214,20 +250,9 @@ void ReportsDialog::createReportCategoria6x40()
 
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            for (QTime r : resultado->lista6x40) {
-                msecs += r.second() * 1000 + r.msec();
+            if (estaApta(C6X40, resultado)) {
+                calcularPromedioC6x40(resultado);
             }
-            int msec6x40 = msecs / resultado->lista6x40.size();
-
-            int secsPromedio = (msec6x40 / 1000);
-            int msecPromedio = msec6x40 - (secsPromedio * 1000);
-
-            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
-            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-
-            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
-                                                                                        C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
          }
     }
 
@@ -238,6 +263,8 @@ void ReportsDialog::createReportCategoria6x40()
     crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
     crearInformeCategoria("PROVINCIAL", resultados);
     crearInformeCategoria("NUEVOINGRESO", resultados);
+    crearInformeCategoria("FORMADORES", resultados);
+    crearInformeCategoria("FUTBOLSALA", resultados);
 
     QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
 }
@@ -260,20 +287,9 @@ void ReportsDialog::createReportCategoria5x40()
 
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            for (QTime r : resultado->lista6x40) {
-                msecs += r.second() * 1000 + r.msec();
+            if (estaApta(C5X40, resultado)) {
+                calcularPromedioC6x40(resultado);
             }
-            int msec6x40 = msecs / resultado->lista6x40.size();
-
-            int secsPromedio = (msec6x40 / 1000);
-            int msecPromedio = msec6x40 - (secsPromedio * 1000);
-
-            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
-            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-
-            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
-                                                                                        C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
          }
     }
 
@@ -284,6 +300,8 @@ void ReportsDialog::createReportCategoria5x40()
     crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
     crearInformeCategoria("PROVINCIAL", resultados);
     crearInformeCategoria("NUEVOINGRESO", resultados);
+    crearInformeCategoria("FORMADORES", resultados);
+    crearInformeCategoria("FUTBOLSALA", resultados);
 
     QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
 }
@@ -309,9 +327,10 @@ void ReportsDialog::createReportCategoria2000()
 
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+            if (estaApta(C2000MTS, resultado)) {
+                resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
                                                                                         C2000MTS, resultado->getResultado2000());
+            }
         }
     }
 
@@ -322,6 +341,8 @@ void ReportsDialog::createReportCategoria2000()
     crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
     crearInformeCategoria("PROVINCIAL", resultados);
     crearInformeCategoria("NUEVOINGRESO", resultados);
+    crearInformeCategoria("FORMADORES", resultados);
+    crearInformeCategoria("FUTBOLSALA", resultados);
 
     QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
 }
@@ -337,18 +358,21 @@ void ReportsDialog::createReportCategoriaPC()
         ResultadoArbitro* resultado = new ResultadoArbitro();
 
         if (mapPC.contains(arbitro->dorsal)) {
-            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            resultado->resultadosPC = mapPC.value(arbitro->dorsal);
+            if (resultado->resultadosPC.size() > 1) {
+                resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            }
         }
         resultado->arbitro = arbitro;
         resultados.append(resultado);
     }
 
     if (!resultados.isEmpty()) {
-        for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-
-            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
-                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+        for (ResultadoArbitro* resultado : resultados) {            
+            if (estaApta(PRUEBA_DE_CAMPO, resultado)) {
+                resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                          PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+            }
         }
     }
 
@@ -359,6 +383,8 @@ void ReportsDialog::createReportCategoriaPC()
     crearInformeCategoria("DIVISIONHONORSENIOR", resultados);
     crearInformeCategoria("PROVINCIAL", resultados);
     crearInformeCategoria("NUEVOINGRESO", resultados);
+    crearInformeCategoria("FORMADORES", resultados);
+    crearInformeCategoria("FUTBOLSALA", resultados);
 
     QMessageBox::information(this, "Crear informe de resultados", "Se han creado los ficheros de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
 }
@@ -381,15 +407,15 @@ void ReportsDialog::crearInformeCategoria(QString categoria,  QList<ResultadoArb
     ExcelReader reader;
 
     if (ui->totalRadio->isChecked()) {
-        reader.createResultsReport(QDir::toNativeSeparators(path + "\\" + categoria + "_resultados.xlsx"), filtrados, categoria);
+        reader.createResultsReport(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_resultados.xlsx"), filtrados, categoria);
     } else if (ui->p6x40Radio->isChecked()) {
-        reader.create6x40Report(QDir::toNativeSeparators(path + "\\" + categoria + "_6x40.xlsx"), filtrados, categoria);
+        reader.create6x40Report(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_6x40.xlsx"), filtrados, categoria);
     } else if (ui->p5x40Radio->isChecked()) {
-        reader.create6x40Report(QDir::toNativeSeparators(path + "\\" + categoria + "_5x40.xlsx"), filtrados, categoria);
+        reader.create6x40Report(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_5x40.xlsx"), filtrados, categoria);
     } else if (ui->p2000Radio->isChecked()) {
-        reader.create2000Report(QDir::toNativeSeparators(path + "\\" + categoria + "_2000.xlsx"), filtrados, categoria);
+        reader.create2000Report(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_2000.xlsx"), filtrados, categoria);
     } else if (ui->pcRadio->isChecked()) {
-        reader.createPCReport(QDir::toNativeSeparators(path + "\\" + categoria + "_pruebaCampo.xlsx"), filtrados, categoria);
+        reader.createPCReport(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_pruebaCampo.xlsx"), filtrados, categoria);
     }
 
     //reader.createResultsReport(QDir::toNativeSeparators(path), filtrados);
@@ -420,7 +446,10 @@ void ReportsDialog::createReportTotal()
         }
 
         if (mapPC.contains(arbitro->dorsal)) {
-            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            resultado->resultadosPC = mapPC.value(arbitro->dorsal);
+            if (resultado->resultadosPC.size() > 1) {
+                resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            }
         }
         resultado->arbitro = arbitro;
         resultados.append(resultado);
@@ -428,26 +457,19 @@ void ReportsDialog::createReportTotal()
 
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            for (QTime r : resultado->lista6x40) {
-                msecs += r.second() * 1000 + r.msec();
+            if (estaApta(C6X40, resultado)) {
+                calcularPromedioC6x40(resultado);
             }
-            int msec6x40 = msecs / resultado->lista6x40.size();
 
-            int secsPromedio = (msec6x40 / 1000);
-            int msecPromedio = msec6x40 - (secsPromedio * 1000);
-
-            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
-            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-
-            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
-                                                                                        C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
-            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+            if (estaApta(C2000MTS, resultado)) {
+                resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
                                                                                         C2000MTS, resultado->getResultado2000());
+            }
 
-
-            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
-                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+            if (estaApta(PRUEBA_DE_CAMPO, resultado)) {
+                resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                          PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+            }
         }
         if (ui->radioButtonOrderDorsal->isChecked()) {
             qSort(resultados.begin(), resultados.end(), ReportsDialog::dorsalMayorQue);
@@ -458,7 +480,7 @@ void ReportsDialog::createReportTotal()
         }
 
         ExcelReader reader;
-        reader.createResultsReport(QDir::toNativeSeparators(path + "\\resultados.xlsx"), resultados, "");
+        reader.createResultsReport(QDir::toNativeSeparators(path + "\\resultados\\resultados.xlsx"), resultados, "");
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
@@ -488,19 +510,9 @@ void ReportsDialog::createReport5x40()
     }
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            int msecs = 0;
-            for (QTime r : resultado->lista6x40) {
-                msecs += r.second() * 1000 + r.msec();
+            if (estaApta(C5X40, resultado)) {
+                calcularPromedioC6x40(resultado);
             }
-            int msec5x40 = msecs / resultado->lista6x40.size();
-
-            int secsPromedio = (msec5x40 / 1000);
-            int msecPromedio = msec5x40 - (secsPromedio * 1000);
-
-            resultado->promedio = resultado->promedio.addSecs(secsPromedio);
-            resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-
-            resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender, C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
         }
 
         if (ui->radioButtonOrderDorsal->isChecked()) {
@@ -512,7 +524,7 @@ void ReportsDialog::createReport5x40()
         }
 
         ExcelReader reader;
-        reader.create5x40Report(QDir::toNativeSeparators(path + "\\resultados_5x40.xlsx"), resultados, "");
+        reader.create5x40Report(QDir::toNativeSeparators(path + "\\resultados\\resultados_5x40.xlsx"), resultados, "");
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de 6x40 en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
 }
@@ -538,8 +550,10 @@ void ReportsDialog::createReport2000()
     }
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+            if (estaApta(C2000MTS, resultado)) {
+                resultado->bonificacion2000 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
                                                                                         C2000MTS, resultado->getResultado2000());
+            }
         }
         if (ui->radioButtonOrderDorsal->isChecked()) {
             qSort(resultados.begin(), resultados.end(), ReportsDialog::dorsalMayorQue);
@@ -550,7 +564,7 @@ void ReportsDialog::createReport2000()
         }
 
         ExcelReader reader;
-        reader.create2000Report(QDir::toNativeSeparators(path + "\\resultados_2000.xlsx"), resultados, "");
+        reader.create2000Report(QDir::toNativeSeparators(path + "\\resultados\\resultados_2000.xlsx"), resultados, "");
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas de 2000 metros en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
@@ -569,15 +583,20 @@ void ReportsDialog::createReportPC()
     {
         ResultadoArbitro* resultado = new ResultadoArbitro();
         if (mapPC.contains(arbitro->dorsal)) {
-            resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            resultado->resultadosPC = mapPC.value(arbitro->dorsal);
+            if (resultado->resultadosPC.size() > 1) {
+                resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            }
         }
         resultado->arbitro = arbitro;
         resultados.append(resultado);
     }
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
-            resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
-                                                                                      PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+            if (estaApta(PRUEBA_DE_CAMPO, resultado)) {
+                resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                                                                                          PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+            }
         }
         if (ui->radioButtonOrderDorsal->isChecked()) {
             qSort(resultados.begin(), resultados.end(), ReportsDialog::dorsalMayorQue);
@@ -588,7 +607,7 @@ void ReportsDialog::createReportPC()
         }
 
         ExcelReader reader;
-        reader.createPCReport(QDir::toNativeSeparators(path + "\\resultados_pruebaCampo.xlsx"), resultados, "");
+        reader.createPCReport(QDir::toNativeSeparators(path + "\\resultados\\resultados_pruebaCampo.xlsx"), resultados, "");
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de la prueba de campo en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }

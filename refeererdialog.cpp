@@ -46,7 +46,7 @@ void RefeererDialog::loadExcel()
 
 void RefeererDialog::loadReferees()
 {
-    qSort(DataManagement::getInstance()->refereesMap.values().begin(),  DataManagement::getInstance()->refereesMap.values().end(),RefeererDialog::dorsalMayorQue);
+   // qSort(DataManagement::getInstance()->refereesMap.values().begin(),  DataManagement::getInstance()->refereesMap.values().end(),RefeererDialog::dorsalMayorQue);
     for (Referee* e : DataManagement::getInstance()->refereesMap.values()) {
         insertRefereeInTable(e);
     }

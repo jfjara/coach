@@ -48,6 +48,7 @@ void DorsalesTagsDialog::addDataToTable(int dorsal, QString tag)
     ui->tableWidget->insertRow(ui->tableWidget->rowCount());
     ui->tableWidget->setItem(ui->tableWidget->rowCount() - 1, 0, new QTableWidgetItem(QString::number(dorsal)));
     ui->tableWidget->setItem(ui->tableWidget->rowCount() - 1, 1, new QTableWidgetItem(tag));
+    map.insert(dorsal, tag);
 }
 
 void DorsalesTagsDialog::asignarTag()
@@ -84,7 +85,7 @@ void DorsalesTagsDialog::cerrarLecturaTarjeta()
 {
     delete timer;
     delete server;
-    ui->leerTagButton->setEnabled(true);
+    //ui->leerTagButton->setEnabled(true);
 }
 
 void DorsalesTagsDialog::leerTarjeta()
@@ -95,7 +96,7 @@ void DorsalesTagsDialog::leerTarjeta()
     timer->start();
     server = new ServerSocket(2, Q_NULLPTR, this, Q_NULLPTR);
     server->StartServer();
-    ui->leerTagButton->setEnabled(false);
+   // ui->leerTagButton->setEnabled(false);
 
 }
 
