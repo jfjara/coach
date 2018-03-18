@@ -48,6 +48,9 @@ QMap<int, QList<QTime>> SessionManagement::loadPrueba(QString filename)
         QList<QTime> times;
         for (int i = 1; i < fields.size(); i++) {
             QString time = fields.at(i);
+            if (time.trimmed().isEmpty()) {
+                continue;
+            }
             times.append(QTime::fromString(time, "hh:mm:ss.zzz"));
         }
         qSort(times.begin(), times.end(), SessionManagement::timeLessThan);

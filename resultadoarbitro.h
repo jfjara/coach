@@ -17,10 +17,10 @@ public:
     QList<QTime> resultadosPC;
     QTime resultadoPC;
 
-    double bonificacion6x40;
-    double bonificacion2000;
-    double bonificacionPC;
-    double bonificacion5x40;
+    double bonificacion6x40 = 0;
+    double bonificacion2000 = 0;
+    double bonificacionPC = 0;
+    double bonificacion5x40 = 0;
 
     bool apto6x40 = true;
     bool apto5x40 = true;

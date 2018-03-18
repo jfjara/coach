@@ -411,7 +411,7 @@ void ReportsDialog::crearInformeCategoria(QString categoria,  QList<ResultadoArb
     } else if (ui->p6x40Radio->isChecked()) {
         reader.create6x40Report(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_6x40.xlsx"), filtrados, categoria);
     } else if (ui->p5x40Radio->isChecked()) {
-        reader.create6x40Report(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_5x40.xlsx"), filtrados, categoria);
+        reader.create5x40Report(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_5x40.xlsx"), filtrados, categoria);
     } else if (ui->p2000Radio->isChecked()) {
         reader.create2000Report(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_2000.xlsx"), filtrados, categoria);
     } else if (ui->pcRadio->isChecked()) {
