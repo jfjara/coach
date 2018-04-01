@@ -79,6 +79,33 @@ void SessionManagement::saveAsignaciones(QMap<int, QString> map)
     }
 }
 
+void SessionManagement::deleteFile(QString path, int tipoPrueba)
+{
+    QString filename = "";
+    switch (tipoPrueba) {
+    case 0:
+        filename = path + "\\6x40.ses";
+        break;
+    case 1:
+        filename = path + "\\2000.ses";
+        break;
+    case 2:
+        filename = path + "\\pc.ses";
+        break;
+    case 3:
+        filename = path + "\\5x40.ses";
+        break;
+
+    }
+
+    QFile file( filename );
+    if (file.exists())
+    {
+        file.remove();
+    }
+
+}
+
 void SessionManagement::save(QString path, int tipoPrueba)
 {
     QString filename = "";
@@ -114,7 +141,7 @@ void SessionManagement::save(QString path, int tipoPrueba)
                     stream << "#";
                 }
             }
-            stream << ";" << '\n';
+            stream << '\n';
         }
     }
 

@@ -15,6 +15,7 @@ public:
 
     QMap<int, QString> loadAsignacionesDorsales();
     void save(QString filename, int tipoPrueba);
+    void deleteFile(QString filename, int tipoPrueba);
     void saveAsignaciones(QMap<int, QString> map);
 
     static bool timeLessThan(const QTime &t1, const QTime &t2) {

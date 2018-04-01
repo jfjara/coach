@@ -81,10 +81,21 @@ bool ReportsDialog::estaApta(SPORT_TEST tipo, ResultadoArbitro* resultado)
             resultado->apto6x40 = false;
             return false;
         }
+        QTime tope = DataManagement::getInstance()->getTope6x40(resultado->arbitro->categoria, resultado->arbitro->gender);
+        if (resultado->lista6x40.at(5) > tope) {
+            resultado->apto6x40 = false;
+            return false;
+        }
+
     }
     if (tipo == C5X40) {
         if (resultado->lista6x40.size() < 5) {
             resultado->apto5x40 = false;
+            return false;
+        }
+        QTime tope = DataManagement::getInstance()->getTope6x40(resultado->arbitro->categoria, resultado->arbitro->gender);
+        if (resultado->lista6x40.at(4) > tope) {
+            resultado->apto6x40 = false;
             return false;
         }
     }
@@ -99,12 +110,23 @@ bool ReportsDialog::estaApta(SPORT_TEST tipo, ResultadoArbitro* resultado)
             resultado->aptoPC= false;
             return false;
         }
+        if (resultado->resultadosPC.size() == 3) {
+            resultado->aptoPC= false;
+            return false;
+        }
+        if (resultado->resultadosPC.size() == 4) {
+            QTime tope = DataManagement::getInstance()->getTopePC(resultado->arbitro->categoria, resultado->arbitro->gender);
+            if (resultado->resultadosPC.at(3) > tope) {
+                resultado->aptoPC = false;
+                return false;
+            }
+        }
     }
     return true;
 }
 
 void ReportsDialog::calcularPromedioC6x40(ResultadoArbitro* resultado)
-{
+{ 
     int msecs = 0;
     for (QTime r : resultado->lista6x40) {
         msecs += r.second() * 1000 + r.msec();
@@ -119,7 +141,11 @@ void ReportsDialog::calcularPromedioC6x40(ResultadoArbitro* resultado)
 
     resultado->promedio = resultado->promedio.addSecs(secsPromedio);
     resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
-    resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender, C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
+    if (resultado->lista6x40.size() != 6) {
+        resultado->bonificacion6x40 = 0;
+    } else {
+        resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender, C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
+    }
 }
 
 void ReportsDialog::createReport6x40()
@@ -141,6 +167,7 @@ void ReportsDialog::createReport6x40()
         resultados.append(resultado);
     }
     if (!resultados.isEmpty()) {
+
         for (ResultadoArbitro* resultado : resultados) {
 
             if (estaApta(C6X40, resultado)) {
@@ -194,8 +221,10 @@ void ReportsDialog::createReportCategoriaTotal()
 
         if (mapPC.contains(arbitro->dorsal)) {
             resultado->resultadosPC = mapPC.value(arbitro->dorsal);
-            if (resultado->resultadosPC.size() > 1) {
+            if (resultado->resultadosPC.size() == 2) {
                 resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            } else if (resultado->resultadosPC.size() == 4) {
+                resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(3);
             }
         }
         resultado->arbitro = arbitro;
@@ -212,8 +241,12 @@ void ReportsDialog::createReportCategoriaTotal()
                                                                                         C2000MTS, resultado->getResultado2000());
             }
             if (estaApta(PRUEBA_DE_CAMPO, resultado)) {
-                resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                if (resultado->resultadosPC.size() == 2) {
+                    resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
                                                                                           PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+                } else {
+                    resultado->bonificacionPC = 0;
+                }
             }
         }
     }
@@ -370,8 +403,12 @@ void ReportsDialog::createReportCategoriaPC()
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {            
             if (estaApta(PRUEBA_DE_CAMPO, resultado)) {
-                resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                if (resultado->resultadosPC.size() == 2) {
+                    resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
                                                                                           PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+                } else {
+                    resultado->bonificacionPC = 0;
+                }
             }
         }
     }
@@ -447,8 +484,10 @@ void ReportsDialog::createReportTotal()
 
         if (mapPC.contains(arbitro->dorsal)) {
             resultado->resultadosPC = mapPC.value(arbitro->dorsal);
-            if (resultado->resultadosPC.size() > 1) {
+            if (resultado->resultadosPC.size() == 2) {
                 resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            } else if (resultado->resultadosPC.size() == 4) {
+                resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(3);
             }
         }
         resultado->arbitro = arbitro;
@@ -467,8 +506,12 @@ void ReportsDialog::createReportTotal()
             }
 
             if (estaApta(PRUEBA_DE_CAMPO, resultado)) {
-                resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                if (resultado->resultadosPC.size() == 2) {
+                    resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
                                                                                           PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+                } else {
+                    resultado->bonificacionPC = 0;
+                }
             }
         }
         if (ui->radioButtonOrderDorsal->isChecked()) {
@@ -584,8 +627,10 @@ void ReportsDialog::createReportPC()
         ResultadoArbitro* resultado = new ResultadoArbitro();
         if (mapPC.contains(arbitro->dorsal)) {
             resultado->resultadosPC = mapPC.value(arbitro->dorsal);
-            if (resultado->resultadosPC.size() > 1) {
+            if (resultado->resultadosPC.size() == 2) {
                 resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(1);
+            } else if (resultado->resultadosPC.size() == 4) {
+                resultado->resultadoPC = mapPC.value(arbitro->dorsal).at(3);
             }
         }
         resultado->arbitro = arbitro;
@@ -594,8 +639,12 @@ void ReportsDialog::createReportPC()
     if (!resultados.isEmpty()) {
         for (ResultadoArbitro* resultado : resultados) {
             if (estaApta(PRUEBA_DE_CAMPO, resultado)) {
-                resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
+                if (resultado->resultadosPC.size() == 2) {
+                    resultado->bonificacionPC = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender,
                                                                                           PRUEBA_DE_CAMPO, (resultado->resultadoPC.minute() * 6000) + (resultado->resultadoPC.second() * 1000) + resultado->resultadoPC.msec());
+                } else {
+                    resultado->bonificacionPC = 0;
+                }
             }
         }
         if (ui->radioButtonOrderDorsal->isChecked()) {

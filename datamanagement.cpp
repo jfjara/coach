@@ -18,6 +18,16 @@ DataManagement* DataManagement::getInstance()
     return instance;
 }
 
+Referee* DataManagement::getRefereeByDorsal(int dorsal)
+{
+    for (Referee* referee : refereesMap.values()) {
+        if (referee->dorsal == dorsal) {
+            return referee;
+        }
+    }
+    return Q_NULLPTR;
+}
+
 double DataManagement::calcularBonificacion(QString categoria, SPORT_TEST prueba, QTime tiempo)
 {
     QList<Bonus*> bonus = bonusMap.value(categoria).value(prueba);
@@ -116,16 +126,62 @@ void DataManagement::mockBonus()
 
 }
 
-QTime DataManagement::getTope6x40(QString categoria)
+QTime DataManagement::getTopePC(QString categoria, QString sexo)
 {
-    double secsDouble = bonusMap.value(categoria).value(C6X40).last()->timeInit;
+    double secsDouble = 0.0;
+    if (sexo == "MASCULINO") {
+        secsDouble = bonusMap.value(categoria).value(PRUEBA_DE_CAMPO).last()->timeEnd;
+    } else {
+        secsDouble = bonusFemMap.value(categoria).value(PRUEBA_DE_CAMPO).last()->timeEnd;
+    }
     int secs = (int)secsDouble;
 
     int h = secs / 3600;
     int m = ( secs % 3600 ) / 60;
     int s = ( secs % 3600 ) % 60;
 
-    QTime t(h, m, s);
+    int ms = 0;
+    if (s > 0) {
+        ms = ((secsDouble - ((double)s + ((double)m * 60.0))) * 1000) + 1;
+    }
+
+    QTime t(h, m, s, ms);
+    qDebug() << "Tope: " << t.toString("hh:mm:ss.zzz");
+    return t;
+}
+
+QTime DataManagement::getTope2000(QString categoria, QString sexo)
+{
+    double time = 0.0;
+    if (sexo == "MASCULINO") {
+        time = bonusMap.value(categoria).value(C2000MTS).last()->timeEnd;
+    } else {
+        time = bonusFemMap.value(categoria).value(C2000MTS).last()->timeEnd;
+    }
+    int minutos = floor(time);
+    double secsDouble = (time - minutos) * 100;
+
+    QTime t(0, minutos, (int)secsDouble, 0);
+    return t;
+}
+
+QTime DataManagement::getTope6x40(QString categoria, QString sexo)
+{
+    double secsDouble = 0.0;
+    if (sexo == "MASCULINO") {
+        secsDouble = bonusMap.value(categoria).value(C6X40).last()->timeEnd;
+    } else {
+        secsDouble = bonusFemMap.value(categoria).value(C6X40).last()->timeEnd;
+    }
+    int secs = (int)secsDouble;
+
+    int h = secs / 3600;
+    int m = ( secs % 3600 ) / 60;
+    int s = ( secs % 3600 ) % 60;
+
+    int ms = ((secsDouble - (double)s) * 1000) + 1;
+
+    QTime t(h, m, s, ms);
     return t;
 }
 

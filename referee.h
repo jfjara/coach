@@ -33,11 +33,12 @@ public:
     bool finished = false;
     int totalLapsRace = 0;
     QString tag;
-    Chrono chronometre;
+    Chrono* chronometre = Q_NULLPTR;
     QTime lastRegister;
     QList<Lap*> laps;
     bool estaDescalificado = false;
     bool nuevaOportunidad = false;
+    bool pintadaNuevaOportunidad = false;
 
     bool isStartLap = true;
 
@@ -46,12 +47,35 @@ public:
 
     void addLap40x6(QTime time, QTime maxTime);
     void addLap(QTime time);
+    void addLapPC(QTime time);
     void startRace();
     void registerLap(QTime time);
     void clean();
     bool isAvailableToRegister(int seconds);
     QString getTotalTime();
-    QString getTimeLastLap();
+    QString getTimeLastLap();    
+    bool checkFinished(int numeroVueltasPrueba) {
+        if (laps.size() == numeroVueltasPrueba && !nuevaOportunidad) {
+            finished = true;
+            return finished;
+        }
+        if (laps.size() >= numeroVueltasPrueba + 1) {
+            finished = true;
+            return finished;
+        }
+        return finished;
+    }
+
+    void checkFueraTiempo(QTime maxTime) {
+        if (!isInTime(maxTime)) {
+            if (!nuevaOportunidad) {
+                nuevaOportunidad = true;
+            } else {
+                estaDescalificado = true;
+                finished = true;
+            }
+        }
+    }
 
     bool isInTime(QTime maxTime);
 };

@@ -67,6 +67,7 @@ public:
     ServerSocket* serverSocket;
 
     QMutex mutex;
+    QMutex mutexTabla;
     int i = 0;
 
 public slots:
@@ -99,16 +100,19 @@ public slots:
     void saveSession();
 
     void receiveTag(QString tag);
+    void refreshTable();
 private:
     Ui::MyCoachMainWindow *ui;    
     QTimer timerStartRace;
     CountDownDialog countDownDialog;
     QTimer dateAndHourTimer;
+    QTimer refreshTableTimer;
     WorkerConnection* workerConnection;
 
 
     void updateRaceInfo();
     void addLapRegistry(Referee* referee);
+    void cambiarColorFila(int dorsal, int vuelta, QBrush color);
     void mostrarMensajeCargaBonus();
     void enableOptions(bool enable);
 

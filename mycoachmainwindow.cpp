@@ -21,8 +21,6 @@ MyCoachMainWindow::MyCoachMainWindow(QWidget *parent) :
     ui->raceTable->horizontalHeader()->resizeSection( 4, 400 );
     ui->raceTable->horizontalHeader()->resizeSection( 5, 170 );
 
-
-
     dateAndHourTimer.setInterval(1000);
     dateAndHourTimer.start();;
     updateDateTime();
@@ -44,12 +42,16 @@ MyCoachMainWindow::MyCoachMainWindow(QWidget *parent) :
     connect(ui->radioPCButton, SIGNAL(clicked(bool)), this, SLOT(configureTestPC()));    
     connect(ui->cargarSesionButton, SIGNAL(clicked(bool)), this, SLOT(loadSession()));
     connect(ui->dorsalTagsButton, SIGNAL(clicked(bool)), this, SLOT(openDorsalesTagsDialog()));
+    connect(&refreshTableTimer, SIGNAL(timeout()), this, SLOT(refreshTable()));
+    //connect(&generatorTag, SIGNAL(sendTag(QString)), this, SLOT(receiveTag(QString)));
 
     ui->reportButton->setEnabled(false);
 
     ui->bonusButton->setVisible(false);
 
     configureTest6x40();
+
+    refreshTableTimer.setInterval(10);
 
    // connect(serverSocket.thread, SIGNAL(sendTagValue(QString)), this, SLOT(receiveTag(QString)));
 
@@ -86,6 +88,10 @@ void MyCoachMainWindow::loadSession()
     QString path = QFileDialog::getExistingDirectory(this, tr("Seleccionar carpeta de trabajo)"), QDir::currentPath());
 
     if (path !=Q_NULLPTR && !path.isEmpty()) {
+
+        DataManagement::getInstance()->bonusFemMap.clear();
+        DataManagement::getInstance()->bonusMap.clear();
+
         cargarBonus("OFICIAL", path + "\\bonificaciones_oficial.xlsx");
         cargarBonus("ASISTENTE2B", path + "\\bonificaciones_asistente2b.xlsx");
         cargarBonus("3DIVISION", path + "\\bonificaciones_3division.xlsx");
@@ -195,6 +201,10 @@ void MyCoachMainWindow::initRace()
     timerSimulation.setInterval(100);
     connect(&timerSimulation, SIGNAL(timeout()), this, SLOT(checkRace()));
     timerSimulation.start();
+    if (ui->radio5x40Button->isChecked() || ui->radio60x40Button->isChecked()) {
+        refreshTableTimer.start();
+    }
+
 }
 
 void MyCoachMainWindow::mostrarMensajeCargaBonus()
@@ -227,6 +237,7 @@ void MyCoachMainWindow::startChonometre()
 {
     clean();
     chronometre.start();
+    //generatorTag.start();
     //startSimulation();
 }
 
@@ -234,8 +245,9 @@ void MyCoachMainWindow::stopChronometre()
 {
     enableOptions(true);
     timerSimulation.stop();
-    generatorTag.stop();
+    //generatorTag.stop();
     chronometre.stop();
+    refreshTableTimer.stop();
 
     SessionManagement session;
 
@@ -253,7 +265,9 @@ void MyCoachMainWindow::stopChronometre()
         tipoPrueba = 3;
         ui->checkBox5x40->setChecked(true);
     }
-    delete serverSocket;
+    //if (serverSocket != Q_NULLPTR) {
+    //    delete serverSocket;
+    //}
     session.save(sessionFilePath, tipoPrueba);
 
     if (ui->checkBox6x40->isChecked() && ui->checkBox2000->isChecked() && ui->checkBoxPC->isChecked()) {
@@ -261,7 +275,7 @@ void MyCoachMainWindow::stopChronometre()
     } else {
         ui->reportButton->setDisabled(false);
     }
-
+    // clean();
 }
 
 void MyCoachMainWindow::openRefereeDialog()
@@ -302,51 +316,99 @@ void MyCoachMainWindow::clean()
         DataManagement::getInstance()->refereesMap.value(tag)->clean();
         DataManagement::getInstance()->refereesMap.value(tag)->finished = false;
     }
+
+    //limpiamos los ficheros necesarios
+    SessionManagement session;
+    int tipoPrueba = 0;
+    if (ui->radio2000Button->isChecked()) {
+        tipoPrueba = 1;
+    } else if (ui->radio60x40Button->isChecked()) {
+        tipoPrueba = 0;
+    } else if (ui->radioPCButton->isChecked()) {
+        tipoPrueba = 2;
+    } else if (ui->radio5x40Button->isChecked()) {
+        tipoPrueba = 3;
+    }
+    session.deleteFile(sessionFilePath, tipoPrueba);
+}
+
+void MyCoachMainWindow::refreshTable()
+{
+
+        mutexTabla.lock();
+        int iRows = ui->raceTable->rowCount();
+
+        for(int i = 0; i < iRows; i++) {
+            QTableWidgetItem* tVuelta = ui->raceTable->item(i, 0);
+            QTableWidgetItem* tDorsal = ui->raceTable->item(i, 3);
+            if (tVuelta == Q_NULLPTR || tDorsal == Q_NULLPTR) {
+                mutexTabla.unlock();
+                return;
+            }
+            QString vDorsal = tDorsal->text();
+            QString vVuelta = tVuelta->text();
+            Referee* referee = DataManagement::getInstance()->getRefereeByDorsal(vDorsal.toInt());
+            if (!referee->laps.at(vVuelta.toInt() - 1)->finalizada) {
+                //hacer el set con el tiempo del chrono del arbitro
+                QTime time = referee->chronometre->getTime();
+                ui->raceTable->item(i, 2)->setText(time.toString("hh:mm:ss.zzz"));
+            } else {
+                //ui->raceTable->item(i, 2)->setText(referee->laps.last()->timeEnd.toString("hh:mm:ss.zzz"));
+            }
+        }
+        mutexTabla.unlock();
+        refreshTableTimer.start();
+
+}
+
+void MyCoachMainWindow::cambiarColorFila(int dorsal, int vuelta, QBrush color)
+{
+    mutexTabla.lock();
+    int iRows = ui->raceTable->rowCount();
+    for(int fila = 0; fila < iRows; fila++) {
+
+        QTableWidgetItem* tVuelta = ui->raceTable->item(fila, 0);
+        QTableWidgetItem* tDorsal = ui->raceTable->item(fila, 3);
+        if (tVuelta == Q_NULLPTR || tDorsal == Q_NULLPTR) {
+            mutexTabla.unlock();
+            return;
+        }
+        QString vDorsal = tDorsal->text();
+        QString vVuelta = tVuelta->text();
+
+        if (dorsal == vDorsal.toInt() && vuelta == vVuelta.toInt()) {
+            for (int i = 0; i < 6; i++) {
+                ui->raceTable->item(fila, i)->setBackground(color);
+            }
+            Referee* referee = DataManagement::getInstance()->getRefereeByDorsal(vDorsal.toInt());
+            ui->raceTable->item(fila, 2)->setText(referee->laps.last()->timeEnd.toString("hh:mm:ss.zzz"));
+            mutexTabla.unlock();
+            return;
+        }
+    }
+    mutexTabla.unlock();
 }
 
 void MyCoachMainWindow::addLapRegistry(Referee* referee)
 {
+    mutexTabla.lock();
     ui->raceTable->insertRow(ui->raceTable->rowCount());
-    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 0, new QTableWidgetItem(QString::number(referee->laps.size())));
-
+    if (ui->radio2000Button->isChecked() || ui->radioPCButton->isChecked()) {
+        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 0, new QTableWidgetItem(QString::number(referee->laps.size() - 1)));
+    } else {
+        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 0, new QTableWidgetItem(QString::number(referee->laps.size())));
+    }
     if (ui->radio5x40Button->isChecked() || ui->radio60x40Button->isChecked()) {
-        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 1, new QTableWidgetItem(referee->laps.at(referee->laps.size() - 1)->timeInit.toString("hh:mm:ss.zzz")));
+        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 1, new QTableWidgetItem(referee->laps.at(referee->laps.size() - 1)->timeEnd.toString("hh:mm:ss.zzz")));
         ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 2, new QTableWidgetItem("-"));
     } else {
         ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 2, new QTableWidgetItem(referee->laps.at(referee->laps.size() - 1)->timeInit.toString("hh:mm:ss.zzz")));
-        //ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 1, new QTableWidgetItem(referee->getTimeLastLap()));
+        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 1, new QTableWidgetItem(""));
     }
-    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 3, new QTableWidgetItem(referee->dorsal));
+    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 3, new QTableWidgetItem(QString::number(referee->dorsal)));
     ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 4, new QTableWidgetItem(referee->name));
-    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 5, new QTableWidgetItem(referee->comarca));
-
-
-    //TODO: completar comprobaciones de tiempos de las demas pruebas
-    if (ui->radio60x40Button->isChecked()) {
-         if (!referee->isInTime(DataManagement::getInstance()->getTope6x40(referee->categoria))) {
-             if (referee->estaDescalificado) {
-                 for (int i = 0; i < 4; i++) {
-                     ui->raceTable->item(ui->raceTable->rowCount() - 1, i)->setBackground(Qt::red);
-                 }
-             } else if (referee->nuevaOportunidad) {
-                 for (int i = 0; i < 4; i++) {
-                     ui->raceTable->item(ui->raceTable->rowCount() - 1, i)->setBackground(QBrush(QColor(248, 215, 0)));
-                 }
-             }
-         }
-    }
-
-    //TODO: Colores
-    if (ui->radioPCButton->isChecked()) {
-
-    }
-
-    //TODO: Colores
-    if (ui->radio2000Button->isChecked()) {
-
-    }
-
-
+    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 5, new QTableWidgetItem(referee->categoria));    
+    mutexTabla.unlock();
 }
 
 void MyCoachMainWindow::cargarBonusFem(QString categoria, QString filename)
@@ -435,8 +497,47 @@ void MyCoachMainWindow::checkRace()
     }
 }
 
+//void MyCoachMainWindow::receiveTag(QString tag)
+//{
+
+//    Referee* referee = DataManagement::getInstance()->refereesMap.value(tag);
+//    if (referee == Q_NULLPTR) {
+//        return;
+//    }
+//    if (referee->finished)
+//        return;
+//    QTime time = referee->chronometre.getTime();
+//    mutex.lock();
+
+//    if (ui->radio60x40Button->isChecked() || ui->radio5x40Button->isChecked()) {
+//        if (!referee->isStartLap) {
+//            if (!referee->isAvailableToRegister(3)) {
+//                mutex.unlock();
+//                return;
+//            }
+//        } else {
+//            if (!referee->isAvailableToRegister(60)) {
+//                mutex.unlock();
+//                return;
+//            }
+//        }
+//        referee->addLap40x6(time, DataManagement::getInstance()->getTope6x40(referee->categoria));
+//        if (referee->isStartLap)
+//            addLapRegistry(referee);
+//    } else {
+//        if (!referee->isAvailableToRegister(DataManagement::getInstance()->secondsBetweenRegister)) {
+//            mutex.unlock();
+//            return;
+//        }
+//        referee->addLap(time);
+//        addLapRegistry(referee);
+//    }
+
+//    mutex.unlock();
+//}
+
 void MyCoachMainWindow::receiveTag(QString tag)
-{    
+{
 
     Referee* referee = DataManagement::getInstance()->refereesMap.value(tag);
     if (referee == Q_NULLPTR) {
@@ -444,35 +545,91 @@ void MyCoachMainWindow::receiveTag(QString tag)
     }
     if (referee->finished)
         return;
-    QTime time = referee->chronometre.getTime();
+    QTime time = referee->chronometre->getTime();
     mutex.lock();
 
     if (ui->radio60x40Button->isChecked() || ui->radio5x40Button->isChecked()) {
-        if (!referee->isStartLap) {
-            if (!referee->isAvailableToRegister(3)) {
+        if (referee->isStartLap) {
+            if (!referee->isAvailableToRegister(10) && referee->laps.size() > 1) {
                 mutex.unlock();
                 return;
             }
-        } else {
-            if (!referee->isAvailableToRegister(60)) {
-                mutex.unlock();
-                return;
-            }
-        }
-        referee->addLap40x6(time, DataManagement::getInstance()->getTope6x40(referee->categoria));
-        if (referee->isStartLap)
+            referee->addLap40x6(time, DataManagement::getInstance()->getTope6x40(referee->categoria, referee->gender));
             addLapRegistry(referee);
+        } else {
+            if (!referee->isAvailableToRegister(2)) {
+                mutex.unlock();
+                return;
+            }
+            referee->laps.last()->timeInit = time;
+            referee->laps.last()->timeEnd = time;
+            referee->laps.last()->finalizada = true;
+            referee->lastRegister = QTime::currentTime();
+            referee->isStartLap = true;
+            referee->chronometre->stop();
+
+            referee->checkFueraTiempo(DataManagement::getInstance()->getTope6x40(referee->categoria, referee->gender));
+
+            if (referee->estaDescalificado) {
+                //cambio de color
+                cambiarColorFila(referee->dorsal, referee->laps.size(), Qt::red);
+            }
+            referee->checkFinished(6);
+            if (referee->nuevaOportunidad && !referee->pintadaNuevaOportunidad) {
+                //cambio de color!
+                referee->pintadaNuevaOportunidad = true;
+                cambiarColorFila(referee->dorsal, referee->laps.size(), QBrush(QColor(248, 215, 0)));
+            }
+
+        }
+
     } else {
         if (!referee->isAvailableToRegister(DataManagement::getInstance()->secondsBetweenRegister)) {
             mutex.unlock();
             return;
         }
-        referee->addLap(time);
+
+        if (ui->radio2000Button->isChecked()) {
+            referee->addLap(time);
+        } else {
+            referee->addLapPC(time);
+        }
         addLapRegistry(referee);
+
+        if (referee->finished && ui->radio2000Button->isChecked()) {
+            if (!referee->isInTime(DataManagement::getInstance()->getTope2000(referee->categoria, referee->gender))) {
+                cambiarColorFila(referee->dorsal, referee->laps.size() - 1, Qt::red);
+            }
+        }
+
+        if (ui->radioPCButton->isChecked()) {
+            referee->checkFueraTiempo(DataManagement::getInstance()->getTopePC(referee->categoria, referee->gender));
+            if (referee->estaDescalificado) {
+                //cambio de color
+                cambiarColorFila(referee->dorsal, referee->laps.size() - 1, Qt::red);
+            }
+            if (!referee->nuevaOportunidad) {
+                referee->checkFinished(2); //se esta marcsndo la salida, por eso una de mas
+            } else {
+                referee->checkFinished(4); //se esta marcsndo la salida, por eso una de mas
+            }
+            if (referee->nuevaOportunidad && !referee->pintadaNuevaOportunidad) {
+                //cambio de color!
+                referee->pintadaNuevaOportunidad = true;
+                referee->totalLapsRace += 2;
+                referee->finished = false;
+                referee->isStartLap = true;
+                //referee->chronometre->start();
+                cambiarColorFila(referee->dorsal, referee->laps.size() - 1, QBrush(QColor(248, 215, 0)));
+
+            }
+        }
+
     }
 
     mutex.unlock();
 }
+
 
 void MyCoachMainWindow::startSimulation()
 {

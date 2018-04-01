@@ -112,17 +112,11 @@ void ExcelReader::create6x40Report(QString path, QList<ResultadoArbitro*> result
     int fila = 8;
     for (ResultadoArbitro* resultado : resultados) {
 
-        bool apto = (resultado->apto6x40 || resultado->apto5x40) && resultado->apto2000 && resultado->aptoPC;
         QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
         celdaDorsal->setProperty("Value", QString::number(resultado->arbitro->dorsal));
 
         QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
         celdaNombre->setProperty("Value", resultado->arbitro->name);
-
-        if (!apto) {
-            fila++;
-            continue;
-        }
 
 
         int seconds = 0;
@@ -171,18 +165,11 @@ void ExcelReader::create5x40Report(QString path, QList<ResultadoArbitro*> result
     int fila = 8;
     for (ResultadoArbitro* resultado : resultados) {
 
-        bool apto = (resultado->apto6x40 || resultado->apto5x40) && resultado->apto2000 && resultado->aptoPC;
-        QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
+       QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
         celdaDorsal->setProperty("Value", QString::number(resultado->arbitro->dorsal));
 
         QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
         celdaNombre->setProperty("Value", resultado->arbitro->name);
-
-        if (!apto) {
-            fila++;
-            continue;
-        }
-
 
         int seconds = 0;
         int mseconds = 0;
@@ -230,16 +217,12 @@ void ExcelReader::create2000Report(QString path, QList<ResultadoArbitro*> result
     int fila = 8;
     for (ResultadoArbitro* resultado : resultados) {
 
-        bool apto = (resultado->apto6x40 || resultado->apto5x40) && resultado->apto2000 && resultado->aptoPC;
+       // bool apto = (resultado->apto6x40 || resultado->apto5x40) && resultado->apto2000 && resultado->aptoPC;
         QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
         celdaDorsal->setProperty("Value", QString::number(resultado->arbitro->dorsal));
 
         QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
         celdaNombre->setProperty("Value", resultado->arbitro->name);
-        if (!apto) {
-            fila++;
-            continue;
-        }
 
 
 
@@ -282,28 +265,28 @@ void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultad
     int fila = 8;
     for (ResultadoArbitro* resultado : resultados) {
 
-        bool apto = (resultado->apto6x40 || resultado->apto5x40) && resultado->apto2000 && resultado->aptoPC;
+        //bool apto = (resultado->apto6x40 || resultado->apto5x40) && resultado->apto2000 && resultado->aptoPC;
         QAxObject * celdaDorsal = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_DORSAL);
         celdaDorsal->setProperty("Value", QString::number(resultado->arbitro->dorsal));
 
         QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
         celdaNombre->setProperty("Value", resultado->arbitro->name);
 
-        if (!apto) {
+       /* if (!apto) {
             fila++;
             continue;
-        }
+        }*/
 
 
         int seconds = 0;
         int mseconds = 0;
 
-        QAxObject * celdaC2000 = excel->querySubObject("Cells(Int, Int)", fila,  4);
+     /*   QAxObject * celdaC2000 = excel->querySubObject("Cells(Int, Int)", fila,  4);
         celdaC2000->setProperty("Value", QString::number(resultado->getResultado2000()));
 
         QAxObject * celdaBonusC2000 = excel->querySubObject("Cells(Int, Int)", fila,  5);
         celdaBonusC2000->setProperty("Value", QString::number(resultado->bonificacion2000));
-
+*/
         QString resultadoPC = "";
         if (resultado->resultadoPC.minute() > 0) {
             resultadoPC = QString::number(resultado->resultadoPC.minute()) + ":";
@@ -315,7 +298,7 @@ void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultad
 
         QAxObject * celdaBonusCPC = excel->querySubObject("Cells(Int, Int)", fila,  5);
         celdaBonusCPC->setProperty("Value", QString::number(resultado->bonificacionPC));
-
+        fila++;
 
     }
     workbook->querySubObject("SaveAs (const QString&)", path);
@@ -355,6 +338,10 @@ void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> res
         celdaNombre->setProperty("Value", resultado->arbitro->name);
 
         if (!apto) {
+            QAxObject *range = excel->querySubObject( "Range(const QString&, const QString&)", QString("D").append(QString::number(fila)), QString("P").append(QString::number(fila)));
+            range->dynamicCall("Merge", 2);
+            range->setProperty("Value", "NO APTO");
+
             fila++;
             continue;
         }

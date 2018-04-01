@@ -15,14 +15,15 @@ public:
         t = new QElapsedTimer();
         t->start(); }
     void restart() {
-        if (t == NULL)
+        if (t == Q_NULLPTR) {
             t = new QElapsedTimer();
+        }
         t->restart();
     }
     void stop() {
-        if (t != NULL) {
+        if (t != Q_NULLPTR) {
             delete t;
-            t = NULL;
+            t = Q_NULLPTR;
         }
     //    t.restart();
     }

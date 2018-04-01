@@ -9,12 +9,16 @@ Referee::Referee()
 
 void Referee::startRace()
 {
-    chronometre.restart();
+    if (chronometre != Q_NULLPTR) {
+        delete chronometre;
+    }
+    chronometre = new Chrono();
+    chronometre->restart();
 }
 
 bool Referee::isInTime(QTime maxTime)
 {
-    if (laps.last()->timeInit <= maxTime) {
+    if (laps.last()->timeEnd <= maxTime) {
         return true;
     }
     return false;
@@ -41,12 +45,14 @@ void Referee::addLap40x6(QTime time, QTime maxTime)
     }
 
     if (isStartLap) {
-        chronometre.start();
+        chronometre->start();
         isStartLap = false;
         lastRegister = QTime::currentTime();
+        registerLap(time);
     } else {
          isStartLap = true;
          registerLap(time);
+         chronometre->stop();
 
          if (!isInTime(maxTime)) {
              if (!nuevaOportunidad) {
@@ -57,7 +63,7 @@ void Referee::addLap40x6(QTime time, QTime maxTime)
              }
          }
 
-         chronometre.stop();
+         chronometre->stop();
          if (!nuevaOportunidad) {
              if (laps.size() == totalLapsRace) {
                  finished = true;
@@ -77,14 +83,36 @@ void Referee::addLap(QTime time)
     }
 
     if (laps.size() == 0) {
-        chronometre.start();
+        chronometre->start();
         registerLap(QTime(0,0));
     } else {
         registerLap(time);
     }
     if (laps.size() - 1 >= totalLapsRace) {
         finished = true;
-        chronometre.stop();
+        chronometre->stop();
+        isStartLap =true;
+    }
+}
+
+void Referee::addLapPC(QTime time)
+{
+    if (finished) {
+        return;
+    }
+
+    if (laps.size() == 0) {
+        chronometre->start();
+        registerLap(QTime(0,0));
+    } else {
+        registerLap(time);
+        if (laps.size() == 3) {
+            chronometre->start();
+        }
+    }
+    if (laps.size() - 1 >= totalLapsRace) {
+        finished = true;
+        chronometre->stop();
         isStartLap =true;
     }
 }
@@ -122,6 +150,7 @@ void Referee::registerLap(QTime time)
 {
     Lap* lap = new Lap();
     lap->timeInit = time;
+    lap->timeEnd = time;
     laps.push_back(lap);
     lastRegister = QTime::currentTime();
 }
@@ -131,8 +160,17 @@ void Referee::clean()
     while (laps.size() > 0) {
         laps.removeLast();
     }
-    chronometre.stop();
+    if (chronometre != Q_NULLPTR) {
+        chronometre->stop();
+        delete chronometre;
+    }
+    chronometre = new Chrono();
+
     lastRegister = QTime::currentTime();
     lastRegister = lastRegister.addSecs(-120);
+    pintadaNuevaOportunidad = false;
+    nuevaOportunidad = false;
+    finished = false;
+    estaDescalificado = false;
 }
 

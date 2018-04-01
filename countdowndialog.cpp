@@ -35,13 +35,13 @@ void CountDownDialog::updateTime()
     }
     time--;
     QSound::play(":/sounds/sounds/beep.wav");
-   // QSound::play("C:\QtWorkspace\MyCoach\sounds\beep1.wav");
-    //QSound::play(":/sounds/beep1.mp3");
+
 
 }
 
 void CountDownDialog::init()
 {
+    time = 10;
     ui->numberLabel->setStyleSheet("QLabel { color : black; }");
     ui->numberLabel->setText("10");
 }

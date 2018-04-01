@@ -39,9 +39,12 @@ public:
     void deleteTagToProcess(QString tag);
     QString popTag();
 
-    QTime getTope6x40(QString categoria);
+    QTime getTopePC(QString categoria, QString sexo);
+    QTime getTope2000(QString categoria, QString sexo);
+    QTime getTope6x40(QString categoria, QString sexo);
 
     QMap<QString, Referee*> refereesMap;
+    Referee* getRefereeByDorsal(int dorsal);
     QMap<QString, QMap<SPORT_TEST, QList<Bonus*>>> bonusMap;
 
     QMap<QString, QMap<SPORT_TEST, QList<Bonus*>>> bonusFemMap;
