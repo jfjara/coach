@@ -4,15 +4,15 @@
 TagGeneratorMock::TagGeneratorMock()
 {
 
-    /*tags.append("000000000000000000024120");
+    tags.append("000000000000000000024120");
     tags.append("000000000000000000024402");
     tags.append("000000000000000000023831");
     tags.append("000000000000000000023183");
-    tags.append("AABBCCDD0000000000020726");*/
+    tags.append("AABBCCDD0000000000020726");
 
 
 
-    tags.append("000000000000000000024578");
+    /*tags.append("000000000000000000024578");
     tags.append("000000000000000000020845");
     tags.append("000000000000000000024067");
     tags.append("000000000000000000022590");
@@ -25,7 +25,7 @@ TagGeneratorMock::TagGeneratorMock()
     tags.append("000000000000000000024573");
     tags.append("000000000000000000024357");
     tags.append("000000000000000000021158");
-    tags.append("000000000000000000024780");
+    tags.append("000000000000000000024780");*/
 
 
     int delay = qrand() % 200;

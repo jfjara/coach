@@ -20,7 +20,7 @@ public:
 
     void readBonus(QString categoria, QString sexo, QString pathFile);
     void readReferees(QString pathFile);
-    void createResultsReport(QString path, QList<ResultadoArbitro*> resultados, QString categoria);
+    void createResultsReport(QString path, QList<ResultadoArbitro*> resultados, QString categoria, bool noAptos);
     void create6x40Report(QString path, QList<ResultadoArbitro*> resultados, QString categoria);
     void create5x40Report(QString path, QList<ResultadoArbitro*> resultados, QString categoria);
     void create2000Report(QString path, QList<ResultadoArbitro*> resultados, QString categoria);

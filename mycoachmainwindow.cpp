@@ -392,22 +392,23 @@ void MyCoachMainWindow::cambiarColorFila(int dorsal, int vuelta, QBrush color)
 void MyCoachMainWindow::addLapRegistry(Referee* referee)
 {
     mutexTabla.lock();
-    ui->raceTable->insertRow(ui->raceTable->rowCount());
+    //ui->raceTable->insertRow(ui->raceTable->rowCount());
+     ui->raceTable->insertRow(0);
     if (ui->radio2000Button->isChecked() || ui->radioPCButton->isChecked()) {
-        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 0, new QTableWidgetItem(QString::number(referee->laps.size() - 1)));
+        ui->raceTable->setItem(0, 0, new QTableWidgetItem(QString::number(referee->laps.size() - 1)));
     } else {
-        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 0, new QTableWidgetItem(QString::number(referee->laps.size())));
+        ui->raceTable->setItem(0, 0, new QTableWidgetItem(QString::number(referee->laps.size())));
     }
     if (ui->radio5x40Button->isChecked() || ui->radio60x40Button->isChecked()) {
-        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 1, new QTableWidgetItem(referee->laps.at(referee->laps.size() - 1)->timeEnd.toString("hh:mm:ss.zzz")));
-        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 2, new QTableWidgetItem("-"));
+        ui->raceTable->setItem(0, 1, new QTableWidgetItem(referee->laps.at(referee->laps.size() - 1)->timeEnd.toString("hh:mm:ss.zzz")));
+        ui->raceTable->setItem(0, 2, new QTableWidgetItem("-"));
     } else {
-        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 2, new QTableWidgetItem(referee->laps.at(referee->laps.size() - 1)->timeInit.toString("hh:mm:ss.zzz")));
-        ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 1, new QTableWidgetItem(""));
+        ui->raceTable->setItem(0, 2, new QTableWidgetItem(referee->laps.at(referee->laps.size() - 1)->timeInit.toString("hh:mm:ss.zzz")));
+        ui->raceTable->setItem(0, 1, new QTableWidgetItem(""));
     }
-    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 3, new QTableWidgetItem(QString::number(referee->dorsal)));
-    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 4, new QTableWidgetItem(referee->name));
-    ui->raceTable->setItem(ui->raceTable->rowCount() - 1, 5, new QTableWidgetItem(referee->categoria));    
+    ui->raceTable->setItem(0, 3, new QTableWidgetItem(QString::number(referee->dorsal)));
+    ui->raceTable->setItem(0, 4, new QTableWidgetItem(referee->name));
+    ui->raceTable->setItem(0, 5, new QTableWidgetItem(referee->categoria));
     mutexTabla.unlock();
 }
 
@@ -550,14 +551,14 @@ void MyCoachMainWindow::receiveTag(QString tag)
 
     if (ui->radio60x40Button->isChecked() || ui->radio5x40Button->isChecked()) {
         if (referee->isStartLap) {
-            if (!referee->isAvailableToRegister(10) && referee->laps.size() > 1) {
+            if (!referee->isAvailableToRegister(80) && referee->laps.size() > 1) {
                 mutex.unlock();
                 return;
             }
             referee->addLap40x6(time, DataManagement::getInstance()->getTope6x40(referee->categoria, referee->gender));
             addLapRegistry(referee);
         } else {
-            if (!referee->isAvailableToRegister(2)) {
+            if (!referee->isAvailableToRegister(4)) {
                 mutex.unlock();
                 return;
             }

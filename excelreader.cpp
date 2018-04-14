@@ -308,7 +308,7 @@ void ExcelReader::createPCReport(QString path, QList<ResultadoArbitro*> resultad
 }
 
 
-void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> resultados, QString categoria)
+void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> resultados, QString categoria, bool noAptos)
 {
 
     QAxObject* excel = new QAxObject( "Excel.Application", 0 );
@@ -337,7 +337,7 @@ void ExcelReader::createResultsReport(QString path, QList<ResultadoArbitro*> res
         QAxObject * celdaNombre = excel->querySubObject("Cells(Int, Int)", fila,  PLANTILLA_RESULTADOS_NOMBRE);
         celdaNombre->setProperty("Value", resultado->arbitro->name);
 
-        if (!apto) {
+        if (!apto && noAptos) {
             QAxObject *range = excel->querySubObject( "Range(const QString&, const QString&)", QString("D").append(QString::number(fila)), QString("P").append(QString::number(fila)));
             range->dynamicCall("Merge", 2);
             range->setProperty("Value", "NO APTO");

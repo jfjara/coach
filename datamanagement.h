@@ -54,7 +54,7 @@ public:
     int totalLaps = 1;
     int distanceLap = 40;
 
-    int secondsBetweenRegister = 4;
+    int secondsBetweenRegister = 8;
 
     QMutex mutex;
 

@@ -142,7 +142,7 @@ void ReportsDialog::calcularPromedioC6x40(ResultadoArbitro* resultado)
     resultado->promedio = resultado->promedio.addSecs(secsPromedio);
     resultado->promedio = resultado->promedio.addMSecs(msecPromedio);
     if (resultado->lista6x40.size() != 6) {
-        resultado->bonificacion6x40 = 0;
+        resultado->bonificacion6x40 = 0.0;
     } else {
         resultado->bonificacion6x40 = DataManagement::getInstance()->getBonificacion(resultado->arbitro->categoria, resultado->arbitro->gender, C6X40, resultado->promedio.second() * 1000 + resultado->promedio.msec());
     }
@@ -444,7 +444,7 @@ void ReportsDialog::crearInformeCategoria(QString categoria,  QList<ResultadoArb
     ExcelReader reader;
 
     if (ui->totalRadio->isChecked()) {
-        reader.createResultsReport(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_resultados.xlsx"), filtrados, categoria);
+        reader.createResultsReport(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_resultados.xlsx"), filtrados, categoria, ui->checkBoxNoAptos->isChecked());
     } else if (ui->p6x40Radio->isChecked()) {
         reader.create6x40Report(QDir::toNativeSeparators(path + "\\resultados\\" + categoria + "_6x40.xlsx"), filtrados, categoria);
     } else if (ui->p5x40Radio->isChecked()) {
@@ -523,7 +523,7 @@ void ReportsDialog::createReportTotal()
         }
 
         ExcelReader reader;
-        reader.createResultsReport(QDir::toNativeSeparators(path + "\\resultados\\resultados.xlsx"), resultados, "");
+        reader.createResultsReport(QDir::toNativeSeparators(path + "\\resultados\\resultados.xlsx"), resultados, "", ui->checkBoxNoAptos->isChecked());
 
         QMessageBox::information(this, "Crear informe de resultados", "Se ha creado el fichero de resultados de las pruebas en la carpeta de trabajo correctamente.", QMessageBox::Ok);
     }
